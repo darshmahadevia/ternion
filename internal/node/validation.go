@@ -3,8 +3,8 @@ package node
 import (
 	"unicode/utf8"
 
-	quorumkvv1 "github.com/Het-Jethva/quorumkv/gen/quorumkv/v1"
-	"github.com/Het-Jethva/quorumkv/internal/raft"
+	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
+	"github.com/darshmahadevia/quorumkv/internal/raft"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

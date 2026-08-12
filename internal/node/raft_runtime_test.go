@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Het-Jethva/quorumkv/internal/config"
-	"github.com/Het-Jethva/quorumkv/internal/raft"
-	"github.com/Het-Jethva/quorumkv/internal/snapshot"
-	"github.com/Het-Jethva/quorumkv/internal/wal"
+	"github.com/darshmahadevia/quorumkv/internal/config"
+	"github.com/darshmahadevia/quorumkv/internal/raft"
+	"github.com/darshmahadevia/quorumkv/internal/snapshot"
+	"github.com/darshmahadevia/quorumkv/internal/wal"
 )
 
 func TestProcessRestartDoesNotGrantSecondVoteInTerm(t *testing.T) {

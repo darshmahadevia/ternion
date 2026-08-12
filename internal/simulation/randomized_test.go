@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Het-Jethva/quorumkv/internal/simulation"
+	"github.com/darshmahadevia/quorumkv/internal/simulation"
 )
 
 func TestRandomizedFaultScheduleIsReplayableAndCoversAllowedFaults(t *testing.T) {

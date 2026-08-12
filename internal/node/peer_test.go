@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	quorumkvv1 "github.com/Het-Jethva/quorumkv/gen/quorumkv/v1"
-	"github.com/Het-Jethva/quorumkv/internal/config"
-	"github.com/Het-Jethva/quorumkv/internal/raft"
+	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
+	"github.com/darshmahadevia/quorumkv/internal/config"
+	"github.com/darshmahadevia/quorumkv/internal/raft"
 )
 
 func TestHandshakeRejectsIncompatiblePeerIdentity(t *testing.T) {

@@ -2445,7 +2445,7 @@ const file_quorumkv_v1_node_proto_rawDesc = "" +
 	"\x06Delete\x12\x1a.quorumkv.v1.DeleteRequest\x1a\x1b.quorumkv.v1.DeleteResponse2\x96\x01\n" +
 	"\vPeerService\x12J\n" +
 	"\tHandshake\x12\x1d.quorumkv.v1.HandshakeRequest\x1a\x1e.quorumkv.v1.HandshakeResponse\x12;\n" +
-	"\x04Send\x12\x18.quorumkv.v1.SendRequest\x1a\x19.quorumkv.v1.SendResponseB;Z9github.com/Het-Jethva/quorumkv/gen/quorumkv/v1;quorumkvv1b\x06proto3"
+	"\x04Send\x12\x18.quorumkv.v1.SendRequest\x1a\x19.quorumkv.v1.SendResponseB?Z=github.com/darshmahadevia/quorumkv/gen/quorumkv/v1;quorumkvv1b\x06proto3"
 
 var (
 	file_quorumkv_v1_node_proto_rawDescOnce sync.Once

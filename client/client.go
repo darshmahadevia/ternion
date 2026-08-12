@@ -7,7 +7,7 @@ import (
 	"math/rand/v2"
 	"time"
 
-	quorumkvv1 "github.com/Het-Jethva/quorumkv/gen/quorumkv/v1"
+	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"

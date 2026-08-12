@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Het-Jethva/quorumkv/internal/raft"
-	"github.com/Het-Jethva/quorumkv/internal/simulation"
+	"github.com/darshmahadevia/quorumkv/internal/raft"
+	"github.com/darshmahadevia/quorumkv/internal/simulation"
 )
 
 func newCluster(t *testing.T, seed int64) *simulation.Cluster {

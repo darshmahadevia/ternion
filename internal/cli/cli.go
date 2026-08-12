@@ -12,8 +12,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Het-Jethva/quorumkv/client"
-	quorumkvv1 "github.com/Het-Jethva/quorumkv/gen/quorumkv/v1"
+	"github.com/darshmahadevia/quorumkv/client"
+	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )

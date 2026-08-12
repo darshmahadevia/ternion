@@ -1,4 +1,4 @@
-module github.com/Het-Jethva/quorumkv
+module github.com/darshmahadevia/quorumkv
 
 go 1.25.0
 

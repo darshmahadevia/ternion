@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Het-Jethva/quorumkv/internal/simulation"
+	"github.com/darshmahadevia/quorumkv/internal/simulation"
 )
 
 func main() {

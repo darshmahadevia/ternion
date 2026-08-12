@@ -12,9 +12,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	quorumkvv1 "github.com/Het-Jethva/quorumkv/gen/quorumkv/v1"
-	"github.com/Het-Jethva/quorumkv/internal/config"
-	"github.com/Het-Jethva/quorumkv/internal/raft"
+	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
+	"github.com/darshmahadevia/quorumkv/internal/config"
+	"github.com/darshmahadevia/quorumkv/internal/raft"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"

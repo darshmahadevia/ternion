@@ -3,8 +3,8 @@ package node
 import (
 	"context"
 
-	quorumkvv1 "github.com/Het-Jethva/quorumkv/gen/quorumkv/v1"
-	"github.com/Het-Jethva/quorumkv/internal/raft"
+	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
+	"github.com/darshmahadevia/quorumkv/internal/raft"
 )
 
 // Delete removes a Key after its sequenced mutation is durably committed and

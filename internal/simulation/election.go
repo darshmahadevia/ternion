@@ -8,7 +8,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/Het-Jethva/quorumkv/internal/raft"
+	"github.com/darshmahadevia/quorumkv/internal/raft"
 )
 
 var threeNodeIDs = []raft.NodeID{"node-1", "node-2", "node-3"}

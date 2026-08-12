@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Het-Jethva/quorumkv/client"
-	"github.com/Het-Jethva/quorumkv/internal/config"
-	"github.com/Het-Jethva/quorumkv/internal/raft"
-	"github.com/Het-Jethva/quorumkv/internal/wal"
+	"github.com/darshmahadevia/quorumkv/client"
+	"github.com/darshmahadevia/quorumkv/internal/config"
+	"github.com/darshmahadevia/quorumkv/internal/raft"
+	"github.com/darshmahadevia/quorumkv/internal/wal"
 )
 
 func TestThreeProcessesRepairFollowerAfterPeerPartitionHeals(t *testing.T) {

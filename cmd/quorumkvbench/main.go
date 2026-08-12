@@ -15,7 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/Het-Jethva/quorumkv/client"
+	"github.com/darshmahadevia/quorumkv/client"
 )
 
 type options struct {

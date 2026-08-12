@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/Het-Jethva/quorumkv/internal/cli"
+	"github.com/darshmahadevia/quorumkv/internal/cli"
 )
 
 func main() {

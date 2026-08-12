@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/Het-Jethva/quorumkv/internal/config"
-	"github.com/Het-Jethva/quorumkv/internal/node"
+	"github.com/darshmahadevia/quorumkv/internal/config"
+	"github.com/darshmahadevia/quorumkv/internal/node"
 )
 
 func main() {

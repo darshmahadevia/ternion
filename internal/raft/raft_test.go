@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Het-Jethva/quorumkv/internal/raft"
+	"github.com/darshmahadevia/quorumkv/internal/raft"
 )
 
 func TestRecoveryAppliesOnlyCommittedSuffixAfterSnapshot(t *testing.T) {

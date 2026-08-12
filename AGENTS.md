@@ -16,7 +16,7 @@
 
 ### Issue tracker
 
-Specs and tickets live in GitHub Issues for `Het-Jethva/quorumkv`. See `docs/agents/issue-tracker.md`.
+Specs and tickets live in GitHub Issues for `darshmahadevia/quorumkv`. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 

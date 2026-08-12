@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package quorumkv.v1;
 
-option go_package = "github.com/Het-Jethva/quorumkv/gen/quorumkv/v1;quorumkvv1";
+option go_package = "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1;quorumkvv1";
 
 service NodeService {
   rpc GetStatus(GetStatusRequest) returns (GetStatusResponse);
