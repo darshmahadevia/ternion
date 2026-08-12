@@ -20,7 +20,7 @@ cleanup() {
   done
   if [ "$(go env GOOS)" = "windows" ]; then
     # The shell PID is not always the go-run child PID under Git Bash.
-    taskkill.exe //IM quorumkv.exe //T //F >/dev/null 2>&1 || true
+    taskkill.exe //IM ternion.exe //T //F >/dev/null 2>&1 || true
   fi
   if [ "$(go env GOOS)" != "windows" ]; then
     for pid in $pids; do
@@ -42,12 +42,12 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 if [ "$(go env GOOS)" != "windows" ]; then
-  node_binary="$work/quorumkv"
-  bench_binary="$work/quorumkvbench"
+  node_binary="$work/ternion"
+  bench_binary="$work/ternionbench"
   (
     cd "$root"
-    go build -o "$node_binary" ./cmd/quorumkv
-    go build -o "$bench_binary" ./cmd/quorumkvbench
+    go build -o "$node_binary" ./cmd/ternion
+    go build -o "$bench_binary" ./cmd/ternionbench
   )
 fi
 
@@ -72,7 +72,7 @@ members:
     client_address: 127.0.0.1:17403
 EOF
   if [ "$(go env GOOS)" = "windows" ]; then
-    (cd "$root" && go run ./cmd/quorumkv -config "$work/node-$node.yaml") >"$work/node-$node.log" 2>&1 &
+    (cd "$root" && go run ./cmd/ternion -config "$work/node-$node.yaml") >"$work/node-$node.log" 2>&1 &
   else
     "$node_binary" -config "$work/node-$node.yaml" >"$work/node-$node.log" 2>&1 &
   fi
@@ -81,7 +81,7 @@ done
 
 # The benchmark client's bounded retry handles startup and Leader election.
 if [ "$(go env GOOS)" = "windows" ]; then
-  (cd "$root" && go run ./cmd/quorumkvbench \
+  (cd "$root" && go run ./cmd/ternionbench \
     -addresses 127.0.0.1:17401,127.0.0.1:17402,127.0.0.1:17403 \
     -output "$output" "$@")
 else

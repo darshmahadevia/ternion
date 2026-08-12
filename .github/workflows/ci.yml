@@ -43,7 +43,7 @@ jobs:
         shell: bash
         run: set -o pipefail; sh demo/run.sh 2>&1 | tee artifacts/docker-demo.log
       - name: Record a replayable seeded failure trace
-        run: go run ./cmd/quorumkvsim -seed 20250308 -steps 400 -trace artifacts/simulation-trace.json
+        run: go run ./cmd/ternionsim -seed 20250308 -steps 400 -trace artifacts/simulation-trace.json
       - name: Upload Linux diagnostics
         if: always()
         uses: actions/upload-artifact@v4
@@ -78,9 +78,9 @@ jobs:
         shell: bash
         run: |
           mkdir -p .traces
-          go build -o .traces/quorumkvsim ./cmd/quorumkvsim
+          go build -o .traces/ternionsim ./cmd/ternionsim
           for seed in $(seq 1 50); do
-            .traces/quorumkvsim -seed "$seed" -steps 1000 -trace ".traces/seed-$seed.json"
+            .traces/ternionsim -seed "$seed" -steps 1000 -trace ".traces/seed-$seed.json"
           done
       - name: Store failing simulation traces
         if: failure()

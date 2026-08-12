@@ -1,40 +1,40 @@
-name: quorumkv-demo
+name: ternion-demo
 
 services:
   node-1:
-    image: quorumkv:demo
+    image: ternion:demo
     build: .
-    command: ["-config", "/etc/quorumkv/node-1.yaml"]
+    command: ["-config", "/etc/ternion/node-1.yaml"]
     volumes:
-      - node-1-data:/var/lib/quorumkv
+      - node-1-data:/var/lib/ternion
     ports:
       - "7401:7401"
       - "7501:7501"
     networks: [cluster]
   node-2:
-    image: quorumkv:demo
+    image: ternion:demo
     build: .
-    command: ["-config", "/etc/quorumkv/node-2.yaml"]
+    command: ["-config", "/etc/ternion/node-2.yaml"]
     volumes:
-      - node-2-data:/var/lib/quorumkv
+      - node-2-data:/var/lib/ternion
     ports:
       - "7402:7402"
       - "7502:7502"
     networks: [cluster]
   node-3:
-    image: quorumkv:demo
+    image: ternion:demo
     build: .
-    command: ["-config", "/etc/quorumkv/node-3.yaml"]
+    command: ["-config", "/etc/ternion/node-3.yaml"]
     volumes:
-      - node-3-data:/var/lib/quorumkv
+      - node-3-data:/var/lib/ternion
     ports:
       - "7403:7403"
       - "7503:7503"
     networks: [cluster]
-  quorumkvctl:
-    image: quorumkv:demo
+  ternionctl:
+    image: ternion:demo
     build: .
-    entrypoint: ["/usr/local/bin/quorumkvctl"]
+    entrypoint: ["/usr/local/bin/ternionctl"]
     networks: [cluster]
 
 volumes:
@@ -44,4 +44,4 @@ volumes:
 
 networks:
   cluster:
-    name: quorumkv-demo-cluster
+    name: ternion-demo-cluster

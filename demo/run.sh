@@ -2,7 +2,7 @@
 set -eu
 
 compose='docker compose -f docker-compose.yml'
-ctl="$compose run --rm --no-deps quorumkvctl"
+ctl="$compose run --rm --no-deps ternionctl"
 cleanup() { $compose down -v --remove-orphans >/dev/null 2>&1 || true; }
 trap cleanup EXIT INT TERM
 

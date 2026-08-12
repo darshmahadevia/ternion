@@ -6,7 +6,7 @@ active_session_limit: 32
 snapshot_threshold_bytes: 32768
 node:
   id: node-2
-  data_dir: /var/lib/quorumkv
+  data_dir: /var/lib/ternion
   metrics_address: 0.0.0.0:7502
 members:
   node-1:

@@ -3,13 +3,13 @@ WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -o /out/quorumkv ./cmd/quorumkv && \
-    CGO_ENABLED=0 go build -o /out/quorumkvctl ./cmd/quorumkvctl && \
+RUN CGO_ENABLED=0 go build -o /out/ternion ./cmd/ternion && \
+    CGO_ENABLED=0 go build -o /out/ternionctl ./cmd/ternionctl && \
     mkdir /out/data
 
 FROM gcr.io/distroless/static-debian12:nonroot
-COPY --from=build /out/quorumkv /usr/local/bin/quorumkv
-COPY --from=build /out/quorumkvctl /usr/local/bin/quorumkvctl
-COPY --from=build --chown=65532:65532 /out/data /var/lib/quorumkv
-COPY demo/config /etc/quorumkv
-ENTRYPOINT ["/usr/local/bin/quorumkv"]
+COPY --from=build /out/ternion /usr/local/bin/ternion
+COPY --from=build /out/ternionctl /usr/local/bin/ternionctl
+COPY --from=build --chown=65532:65532 /out/data /var/lib/ternion
+COPY demo/config /etc/ternion
+ENTRYPOINT ["/usr/local/bin/ternion"]
