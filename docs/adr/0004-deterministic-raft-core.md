@@ -1,0 +1,3 @@
+# Isolate Raft as a deterministic state machine
+
+The Raft core will process one event at a time and emit actions without directly performing networking, disk I/O, or timer management; a runtime layer will execute those actions and report completions back as events. The core uses small internal message types rather than generated Protobuf types, while the gRPC transport adapter owns wire conversion. This requires explicit event, action, and adapter boundaries, but avoids shared-state concurrency in the consensus logic and enables deterministic simulation of elections, partitions, crashes, persistence delays, and reordered messages.

@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Prepare failure artifacts
+        run: mkdir -p artifacts
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)"
+      - name: Test full suite
+        shell: bash
+        run: set -o pipefail; go test -json ./... | tee artifacts/go-test.json
+      - name: Build commands
+        run: go build ./cmd/...
+      - name: Race detection
+        shell: bash
+        run: set -o pipefail; go test -race -json ./... | tee artifacts/go-test-race.json
+      - name: Vet
+        shell: bash
+        run: set -o pipefail; go vet ./... 2>&1 | tee artifacts/go-vet.log
+      - name: Run real-process failure scenarios
+        shell: bash
+        run: |
+          set -o pipefail
+          go test -v ./internal/node \
+            -run 'Test(ThreeProcesses|LostSetResponse|SetSurvivesLeaderCrashAtEveryMutationBoundary|ThreeProcessesRepairFollower)' \
+            2>&1 | tee artifacts/real-process.log
+      - name: Run public Docker failure demo
+        shell: bash
+        run: set -o pipefail; sh demo/run.sh 2>&1 | tee artifacts/docker-demo.log
+      - name: Record a replayable seeded failure trace
+        run: go run ./cmd/quorumkvsim -seed 20250308 -steps 400 -trace artifacts/simulation-trace.json
+      - name: Upload Linux diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-diagnostics
+          path: artifacts
+          if-no-files-found: warn
+          retention-days: 14
+
+  windows-portable:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Test portable core and durable store
+        run: go test ./internal/config ./internal/raft ./internal/snapshot ./internal/simulation ./internal/wal
+      - name: Vet portable packages
+        run: go vet ./internal/config ./internal/raft ./internal/snapshot ./internal/simulation ./internal/wal
+
+  seeded-simulation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Run replayable fault schedules
+        shell: bash
+        run: |
+          mkdir -p .traces
+          go build -o .traces/quorumkvsim ./cmd/quorumkvsim
+          for seed in $(seq 1 50); do
+            .traces/quorumkvsim -seed "$seed" -steps 1000 -trace ".traces/seed-$seed.json"
+          done
+      - name: Store failing simulation traces
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: simulation-traces
+          path: .traces/*.json
+          if-no-files-found: error
+
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: dominikh/staticcheck-action@v1
+        with:
+          version: latest
+          install-go: false
+
+  protobuf:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Lint and regenerate Protobuf
+        run: |
+          go run github.com/bufbuild/buf/cmd/buf@v1.57.2 lint
+          go run github.com/bufbuild/buf/cmd/buf@v1.57.2 generate
+          git diff --exit-code

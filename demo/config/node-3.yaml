@@ -1,0 +1,20 @@
+version: 1
+cluster_id: demo-cluster
+active_session_limit: 32
+# A small threshold makes snapshot creation and stale-Follower recovery visible
+# during the short demo. Production defaults to 64 MiB when this is omitted.
+snapshot_threshold_bytes: 32768
+node:
+  id: node-3
+  data_dir: /var/lib/quorumkv
+  metrics_address: 0.0.0.0:7503
+members:
+  node-1:
+    peer_address: node-1:7301
+    client_address: node-1:7401
+  node-2:
+    peer_address: node-2:7302
+    client_address: node-2:7402
+  node-3:
+    peer_address: node-3:7303
+    client_address: node-3:7403

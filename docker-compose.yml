@@ -1,0 +1,47 @@
+name: quorumkv-demo
+
+services:
+  node-1:
+    image: quorumkv:demo
+    build: .
+    command: ["-config", "/etc/quorumkv/node-1.yaml"]
+    volumes:
+      - node-1-data:/var/lib/quorumkv
+    ports:
+      - "7401:7401"
+      - "7501:7501"
+    networks: [cluster]
+  node-2:
+    image: quorumkv:demo
+    build: .
+    command: ["-config", "/etc/quorumkv/node-2.yaml"]
+    volumes:
+      - node-2-data:/var/lib/quorumkv
+    ports:
+      - "7402:7402"
+      - "7502:7502"
+    networks: [cluster]
+  node-3:
+    image: quorumkv:demo
+    build: .
+    command: ["-config", "/etc/quorumkv/node-3.yaml"]
+    volumes:
+      - node-3-data:/var/lib/quorumkv
+    ports:
+      - "7403:7403"
+      - "7503:7503"
+    networks: [cluster]
+  quorumkvctl:
+    image: quorumkv:demo
+    build: .
+    entrypoint: ["/usr/local/bin/quorumkvctl"]
+    networks: [cluster]
+
+volumes:
+  node-1-data:
+  node-2-data:
+  node-3-data:
+
+networks:
+  cluster:
+    name: quorumkv-demo-cluster

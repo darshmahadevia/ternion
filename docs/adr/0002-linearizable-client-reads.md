@@ -1,0 +1,3 @@
+# Make client reads linearizable
+
+Every successful `GET` will be linearizable. A newly elected leader will first append and commit a no-op entry from its term, after which it may use a ReadIndex-style protocol: confirm its authority with a heartbeat round-trip to a quorum, capture the commit index, and wait until its state machine has applied through that index before reading. Followers will direct clients to the leader. QuorumKV will not initially log reads, serve stale follower reads, or depend on clock-based leader leases. This adds coordination latency and prevents reads from an isolated minority, but makes the database's strong-consistency claim precise and prevents a deposed leader from returning stale data.
