@@ -1,11 +1,11 @@
-# QuorumKV
+# Ternion
 
-QuorumKV is a distributed key-value database whose members cooperate to present one strongly consistent store to clients.
+Ternion is a distributed key-value database whose members cooperate to present one strongly consistent store to clients.
 
 ## Language
 
 **Cluster**:
-A group of QuorumKV nodes that together present one logical key-value database.
+A group of Ternion nodes that together present one logical key-value database.
 
 **Node**:
 An independently running member of a cluster, with its own identity and durable state.
@@ -16,7 +16,7 @@ A non-empty UTF-8 identifier for a value within a cluster.
 _Avoid_: Path, record ID
 
 **Value**:
-An opaque sequence of bytes associated with a key; QuorumKV assigns no structure or meaning to its contents.
+An opaque sequence of bytes associated with a key; Ternion assigns no structure or meaning to its contents.
 _Avoid_: JSON document, object
 
 **Command**:

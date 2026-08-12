@@ -1,9 +1,9 @@
-# QuorumKV v1: architecture and guarantees
+# Ternion v1: architecture and guarantees
 
 ## One-minute tour
 
 ```text
-quorumkvctl ──gRPC──> any Node ──Raft peer gRPC──> the other two Nodes
+ternionctl ──gRPC──> any Node ──Raft peer gRPC──> the other two Nodes
                          │                         │
                          └── segmented WAL         └── independent volume
                              + in-memory state
@@ -38,7 +38,7 @@ down -v` to remove its data.
 
 ## Trade-offs and non-goals
 
-QuorumKV v1 is a fixed three-Node Cluster. A minority cannot make progress,
+Ternion v1 is a fixed three-Node Cluster. A minority cannot make progress,
 which is the deliberate availability trade-off for linearizability and safe
 commitment. The project does not provide dynamic membership, transactions,
 watches, TTLs, TLS, authentication, authorization, WAN tuning, Byzantine
@@ -58,4 +58,4 @@ its required WAL history has been compacted.
 Linearizable consistency means a completed write is visible to a later read,
 and an isolated minority is unavailable. Eventual consistency could serve a
 minority's stale local state, but would not provide that read-after-write
-contract; QuorumKV intentionally chooses the former guarantee.
+contract; Ternion intentionally chooses the former guarantee.

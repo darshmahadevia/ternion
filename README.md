@@ -1,9 +1,9 @@
-# QuorumKV
+# Ternion
 
-QuorumKV is a three-Node distributed key-value database in Go. Each Node is an
+Ternion is a three-Node distributed key-value database in Go. Each Node is an
 independent process with its own identity, network endpoints, WAL, Snapshot
-files, and persistent volume. QuorumKV implements its own deterministic Raft
-state machine and exposes typed gRPC APIs plus `quorumkvctl`.
+files, and persistent volume. Ternion implements its own deterministic Raft
+state machine and exposes typed gRPC APIs plus `ternionctl`.
 
 ## 60-second demo
 
@@ -20,19 +20,19 @@ Snapshot/compaction followed by stale-Follower Snapshot recovery. It cleans up
 its volumes when it exits. The demo uses a tiny Snapshot threshold so the
 recovery path is visible quickly; normal configurations default to 64 MiB.
 
-For a manual local Cluster, copy `quorumkv.example.yaml` three times, keep the
+For a manual local Cluster, copy `ternion.example.yaml` three times, keep the
 Cluster Identity and member map identical, and change `node.id` and
 `node.data_dir` in each copy. Start each with:
 
 ```sh
-go run ./cmd/quorumkv -config node-1.yaml
-go run ./cmd/quorumkv -config node-2.yaml
-go run ./cmd/quorumkv -config node-3.yaml
-go run ./cmd/quorumkvctl -address 127.0.0.1:7401 status
-go run ./cmd/quorumkvctl -address 127.0.0.1:7401 session open
-go run ./cmd/quorumkvctl -address 127.0.0.1:7401 set <session-id> 1 greeting hello
-go run ./cmd/quorumkvctl -address 127.0.0.1:7401 get greeting
-go run ./cmd/quorumkvctl -address 127.0.0.1:7401 delete <session-id> 2 greeting
+go run ./cmd/ternion -config node-1.yaml
+go run ./cmd/ternion -config node-2.yaml
+go run ./cmd/ternion -config node-3.yaml
+go run ./cmd/ternionctl -address 127.0.0.1:7401 status
+go run ./cmd/ternionctl -address 127.0.0.1:7401 session open
+go run ./cmd/ternionctl -address 127.0.0.1:7401 set <session-id> 1 greeting hello
+go run ./cmd/ternionctl -address 127.0.0.1:7401 get greeting
+go run ./cmd/ternionctl -address 127.0.0.1:7401 delete <session-id> 2 greeting
 ```
 
 A Follower returns a typed Leader hint and the client follows it directly.
@@ -61,7 +61,7 @@ metadata, not production claims.
 ## Replay a deterministic fault schedule
 
 ```sh
-go run ./cmd/quorumkvsim -seed 42 -steps 1000 -trace .traces/seed-42.json
+go run ./cmd/ternionsim -seed 42 -steps 1000 -trace .traces/seed-42.json
 ```
 
 A failed schedule prints its exact replay command and CI retains traces as

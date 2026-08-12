@@ -1,6 +1,6 @@
 # Issue tracker: GitHub
 
-Issues and PRDs live in GitHub Issues for `darshmahadevia/quorumkv`. Use `gh` for issue operations and infer the repository from `origin`.
+Issues and PRDs live in GitHub Issues for `darshmahadevia/ternion`. Use `gh` for issue operations and infer the repository from `origin`.
 
 Apply `ready-for-agent` to implementation-ready specs and tickets. Use native GitHub blocking relationships where available; otherwise include explicit `Blocked by` references in issue bodies.
 
