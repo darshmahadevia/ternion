@@ -1,4 +1,4 @@
-// quorumkvsim replays one seeded deterministic fault schedule.
+// ternionsim replays one seeded deterministic fault schedule.
 package main
 
 import (
@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/darshmahadevia/quorumkv/internal/simulation"
+	"github.com/darshmahadevia/ternion/internal/simulation"
 )
 
 func main() {
@@ -32,7 +32,7 @@ func main() {
 		for _, event := range result.Trace {
 			fmt.Fprintf(os.Stderr, "%04d %-22s %-8s %s\n", event.Sequence, event.Kind, event.Node, event.Detail)
 		}
-		fmt.Fprintf(os.Stderr, "replay: go run ./cmd/quorumkvsim -seed %d -steps %d\n", *seed, *steps)
+		fmt.Fprintf(os.Stderr, "replay: go run ./cmd/ternionsim -seed %d -steps %d\n", *seed, *steps)
 		os.Exit(1)
 	}
 	fmt.Printf("seed %d passed %d scheduler steps (%d trace events)\n", *seed, *steps, len(result.Trace))

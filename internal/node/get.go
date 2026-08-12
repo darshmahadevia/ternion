@@ -3,8 +3,8 @@ package node
 import (
 	"context"
 
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/raft"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -17,7 +17,7 @@ type readResult struct {
 }
 
 // Get returns a Value only after Raft confirms the Leader's current authority.
-func (n *Node) Get(ctx context.Context, request *quorumkvv1.GetRequest) (*quorumkvv1.GetResponse, error) {
+func (n *Node) Get(ctx context.Context, request *ternionv1.GetRequest) (*ternionv1.GetResponse, error) {
 	if err := validateKey(request.Key); err != nil {
 		return nil, err
 	}
@@ -43,13 +43,13 @@ func (n *Node) Get(ctx context.Context, request *quorumkvv1.GetRequest) (*quorum
 		}
 		if !result.found {
 			base := status.Newf(codes.NotFound, "Key %q was not found", request.Key)
-			withDetails, err := base.WithDetails(&quorumkvv1.KeyNotFound{Key: request.Key})
+			withDetails, err := base.WithDetails(&ternionv1.KeyNotFound{Key: request.Key})
 			if err != nil {
 				return nil, base.Err()
 			}
 			return nil, withDetails.Err()
 		}
-		return &quorumkvv1.GetResponse{Value: result.value}, nil
+		return &ternionv1.GetResponse{Value: result.value}, nil
 	case <-n.runtimeDone:
 		return nil, status.Error(codes.Unavailable, "Node stopped before GET completed")
 	case <-ctx.Done():

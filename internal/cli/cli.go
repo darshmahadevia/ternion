@@ -1,4 +1,4 @@
-// Package cli implements the quorumkvctl command surface independently of
+// Package cli implements the ternionctl command surface independently of
 // process startup so integration tests can exercise it against real Nodes.
 package cli
 
@@ -12,15 +12,15 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/darshmahadevia/quorumkv/client"
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
+	"github.com/darshmahadevia/ternion/client"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// Run parses and executes one quorumkvctl command, writing JSON results to output.
+// Run parses and executes one ternionctl command, writing JSON results to output.
 func Run(args []string, output io.Writer) error {
-	flags := flag.NewFlagSet("quorumkvctl", flag.ContinueOnError)
+	flags := flag.NewFlagSet("ternionctl", flag.ContinueOnError)
 	address := flags.String("address", "127.0.0.1:7400", "node client address")
 	timeout := flags.Duration("timeout", 5*time.Second, "request timeout")
 	if err := flags.Parse(args); err != nil {
@@ -53,7 +53,7 @@ func Run(args []string, output io.Writer) error {
 	}
 	defer connection.Close()
 
-	status, err := quorumkvv1.NewNodeServiceClient(connection).GetStatus(ctx, &quorumkvv1.GetStatusRequest{})
+	status, err := ternionv1.NewNodeServiceClient(connection).GetStatus(ctx, &ternionv1.GetStatusRequest{})
 	if err != nil {
 		return fmt.Errorf("get node status from %q: %w", *address, err)
 	}
@@ -165,7 +165,7 @@ func runSession(ctx context.Context, output io.Writer, address string, args []st
 			Closed    bool   `json:"closed"`
 		}{SessionID: args[1], Closed: true})
 	}
-	return fmt.Errorf("usage: quorumkvctl [flags] session open | session close <session-id>")
+	return fmt.Errorf("usage: ternionctl [flags] session open | session close <session-id>")
 }
 
 func parseSessionID(encoded string) ([16]byte, error) {
@@ -179,5 +179,5 @@ func parseSessionID(encoded string) ([16]byte, error) {
 }
 
 func usageError() error {
-	return fmt.Errorf("usage: quorumkvctl [flags] status | session open | session close <session-id> | set <session-id> <sequence> <key> <value> | get <key> | delete <session-id> <sequence> <key>")
+	return fmt.Errorf("usage: ternionctl [flags] status | session open | session close <session-id> | set <session-id> <sequence> <key> <value> | get <key> | delete <session-id> <sequence> <key>")
 }

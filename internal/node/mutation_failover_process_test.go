@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/darshmahadevia/quorumkv/client"
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/config"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
-	"github.com/darshmahadevia/quorumkv/internal/wal"
+	"github.com/darshmahadevia/ternion/client"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/config"
+	"github.com/darshmahadevia/ternion/internal/raft"
+	"github.com/darshmahadevia/ternion/internal/wal"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 	"gopkg.in/yaml.v3"
@@ -116,7 +116,7 @@ func TestSetSurvivesLeaderCrashAtEveryMutationBoundary(t *testing.T) {
 }
 
 func TestMutationNodeProcessHelper(t *testing.T) {
-	path := os.Getenv("QUORUMKV_MUTATION_PROCESS_CONFIG")
+	path := os.Getenv("TERNION_MUTATION_PROCESS_CONFIG")
 	if path == "" {
 		return
 	}
@@ -125,13 +125,13 @@ func TestMutationNodeProcessHelper(t *testing.T) {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
-	boundary, err := parseMutationBoundary(os.Getenv("QUORUMKV_TEST_MUTATION_BOUNDARY"))
+	boundary, err := parseMutationBoundary(os.Getenv("TERNION_TEST_MUTATION_BOUNDARY"))
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(2)
 	}
-	key := os.Getenv("QUORUMKV_TEST_MUTATION_KEY")
-	marker := os.Getenv("QUORUMKV_TEST_MUTATION_MARKER")
+	key := os.Getenv("TERNION_TEST_MUTATION_KEY")
+	marker := os.Getenv("TERNION_TEST_MUTATION_MARKER")
 	n := New(cfg)
 	n.observeMutation = func(actual mutationBoundary, entry raft.LogEntry) {
 		if actual != boundary || entry.Key != key || entry.Sequence != 1 {
@@ -185,10 +185,10 @@ func startMutationNodeProcess(t *testing.T, cfg config.Config, boundary mutation
 	process := &mutationNodeProcess{done: make(chan error, 1)}
 	process.command = exec.Command(executable, "-test.run=^TestMutationNodeProcessHelper$")
 	process.command.Env = append(os.Environ(),
-		"QUORUMKV_MUTATION_PROCESS_CONFIG="+path,
-		"QUORUMKV_TEST_MUTATION_BOUNDARY="+mutationBoundaryName(boundary),
-		"QUORUMKV_TEST_MUTATION_KEY="+key,
-		"QUORUMKV_TEST_MUTATION_MARKER="+marker,
+		"TERNION_MUTATION_PROCESS_CONFIG="+path,
+		"TERNION_TEST_MUTATION_BOUNDARY="+mutationBoundaryName(boundary),
+		"TERNION_TEST_MUTATION_KEY="+key,
+		"TERNION_TEST_MUTATION_MARKER="+marker,
 	)
 	process.command.Stdout = &process.output
 	process.command.Stderr = &process.output
@@ -271,7 +271,7 @@ func waitForMutationLeader(t *testing.T, members map[string]config.Member, exclu
 	t.Helper()
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
-		observed := make(map[string]*quorumkvv1.GetStatusResponse)
+		observed := make(map[string]*ternionv1.GetStatusResponse)
 		for id, member := range members {
 			if excluded[id] {
 				continue
@@ -283,7 +283,7 @@ func waitForMutationLeader(t *testing.T, members map[string]config.Member, exclu
 		var leader string
 		leaders := 0
 		for id, status := range observed {
-			if status.Role == quorumkvv1.RaftRole_RAFT_ROLE_LEADER {
+			if status.Role == ternionv1.RaftRole_RAFT_ROLE_LEADER {
 				leader = id
 				leaders++
 			}
@@ -306,7 +306,7 @@ func waitForMutationLeader(t *testing.T, members map[string]config.Member, exclu
 	return ""
 }
 
-func fetchMutationStatus(address string) *quorumkvv1.GetStatusResponse {
+func fetchMutationStatus(address string) *ternionv1.GetStatusResponse {
 	connection, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil
@@ -314,7 +314,7 @@ func fetchMutationStatus(address string) *quorumkvv1.GetStatusResponse {
 	defer connection.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
-	response, err := quorumkvv1.NewNodeServiceClient(connection).GetStatus(ctx, &quorumkvv1.GetStatusRequest{})
+	response, err := ternionv1.NewNodeServiceClient(connection).GetStatus(ctx, &ternionv1.GetStatusRequest{})
 	if err != nil {
 		return nil
 	}

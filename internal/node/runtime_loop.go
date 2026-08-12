@@ -8,8 +8,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/darshmahadevia/quorumkv/internal/raft"
-	"github.com/darshmahadevia/quorumkv/internal/snapshot"
+	"github.com/darshmahadevia/ternion/internal/raft"
+	"github.com/darshmahadevia/ternion/internal/snapshot"
 )
 
 const (

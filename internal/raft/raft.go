@@ -1,4 +1,4 @@
-// Package raft implements the deterministic QuorumKV consensus state machine.
+// Package raft implements the deterministic Ternion consensus state machine.
 package raft
 
 import "sort"

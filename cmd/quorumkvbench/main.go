@@ -1,4 +1,4 @@
-// Command quorumkvbench measures the public API of a running three-Node Cluster.
+// Command ternionbench measures the public API of a running three-Node Cluster.
 package main
 
 import (
@@ -15,7 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/darshmahadevia/quorumkv/client"
+	"github.com/darshmahadevia/ternion/client"
 )
 
 type options struct {
@@ -77,7 +77,7 @@ func main() {
 }
 
 func run(args []string) error {
-	flags := flag.NewFlagSet("quorumkvbench", flag.ContinueOnError)
+	flags := flag.NewFlagSet("ternionbench", flag.ContinueOnError)
 	addresses := flags.String("addresses", "127.0.0.1:17401,127.0.0.1:17402,127.0.0.1:17403", "comma-separated Node client addresses")
 	setOperations := flags.Int("set-operations", 500, "number of durable SET commands")
 	getOperations := flags.Int("get-operations", 2000, "number of linearizable GET commands")

@@ -1,6 +1,6 @@
 package node
 
-import "github.com/darshmahadevia/quorumkv/internal/raft"
+import "github.com/darshmahadevia/ternion/internal/raft"
 
 // mutationBoundary identifies the durability transitions where a process loss
 // changes what a caller can know about a mutation's outcome. The observer is

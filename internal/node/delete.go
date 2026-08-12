@@ -3,13 +3,13 @@ package node
 import (
 	"context"
 
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/raft"
 )
 
 // Delete removes a Key after its sequenced mutation is durably committed and
 // applied. A duplicate sequence returns the original existed result.
-func (n *Node) Delete(ctx context.Context, request *quorumkvv1.DeleteRequest) (*quorumkvv1.DeleteResponse, error) {
+func (n *Node) Delete(ctx context.Context, request *ternionv1.DeleteRequest) (*ternionv1.DeleteResponse, error) {
 	if err := validateMutation(request.SessionId, request.Sequence, request.Key); err != nil {
 		return nil, err
 	}
@@ -30,5 +30,5 @@ func (n *Node) Delete(ctx context.Context, request *quorumkvv1.DeleteRequest) (*
 	if err := n.proposalError(result); err != nil {
 		return nil, err
 	}
-	return &quorumkvv1.DeleteResponse{Existed: result.existed}, nil
+	return &ternionv1.DeleteResponse{Existed: result.existed}, nil
 }

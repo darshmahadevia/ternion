@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/darshmahadevia/quorumkv/client"
-	"github.com/darshmahadevia/quorumkv/internal/config"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
-	"github.com/darshmahadevia/quorumkv/internal/wal"
+	"github.com/darshmahadevia/ternion/client"
+	"github.com/darshmahadevia/ternion/internal/config"
+	"github.com/darshmahadevia/ternion/internal/raft"
+	"github.com/darshmahadevia/ternion/internal/wal"
 )
 
 func TestThreeProcessesRepairFollowerAfterPeerPartitionHeals(t *testing.T) {

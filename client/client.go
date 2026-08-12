@@ -1,4 +1,4 @@
-// Package client implements the official QuorumKV v1 client behavior.
+// Package client implements the official Ternion v1 client behavior.
 package client
 
 import (
@@ -7,7 +7,7 @@ import (
 	"math/rand/v2"
 	"time"
 
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -34,8 +34,8 @@ func New(addresses ...string) *Client {
 // OpenSession creates a replicated Client Session and returns its 128-bit identity.
 func (c *Client) OpenSession(ctx context.Context) ([16]byte, error) {
 	var sessionID [16]byte
-	err := c.withLeader(ctx, func(client quorumkvv1.ClientServiceClient) error {
-		response, err := client.OpenSession(ctx, &quorumkvv1.OpenSessionRequest{})
+	err := c.withLeader(ctx, func(client ternionv1.ClientServiceClient) error {
+		response, err := client.OpenSession(ctx, &ternionv1.OpenSessionRequest{})
 		if err != nil {
 			return err
 		}
@@ -50,16 +50,16 @@ func (c *Client) OpenSession(ctx context.Context) ([16]byte, error) {
 
 // CloseSession permanently closes sessionID through consensus.
 func (c *Client) CloseSession(ctx context.Context, sessionID [16]byte) error {
-	return c.withLeader(ctx, func(client quorumkvv1.ClientServiceClient) error {
-		_, err := client.CloseSession(ctx, &quorumkvv1.CloseSessionRequest{SessionId: sessionID[:]})
+	return c.withLeader(ctx, func(client ternionv1.ClientServiceClient) error {
+		_, err := client.CloseSession(ctx, &ternionv1.CloseSessionRequest{SessionId: sessionID[:]})
 		return err
 	})
 }
 
 // Set stores Value under key using the next sequence in sessionID.
 func (c *Client) Set(ctx context.Context, sessionID [16]byte, sequence uint64, key string, value []byte) error {
-	return c.withLeader(ctx, func(client quorumkvv1.ClientServiceClient) error {
-		_, err := client.Set(ctx, &quorumkvv1.SetRequest{
+	return c.withLeader(ctx, func(client ternionv1.ClientServiceClient) error {
+		_, err := client.Set(ctx, &ternionv1.SetRequest{
 			SessionId: sessionID[:],
 			Sequence:  sequence,
 			Key:       key,
@@ -72,8 +72,8 @@ func (c *Client) Set(ctx context.Context, sessionID [16]byte, sequence uint64, k
 // Delete removes key and reports whether a Value existed before the mutation.
 func (c *Client) Delete(ctx context.Context, sessionID [16]byte, sequence uint64, key string) (bool, error) {
 	var existed bool
-	err := c.withLeader(ctx, func(client quorumkvv1.ClientServiceClient) error {
-		response, err := client.Delete(ctx, &quorumkvv1.DeleteRequest{
+	err := c.withLeader(ctx, func(client ternionv1.ClientServiceClient) error {
+		response, err := client.Delete(ctx, &ternionv1.DeleteRequest{
 			SessionId: sessionID[:],
 			Sequence:  sequence,
 			Key:       key,
@@ -90,8 +90,8 @@ func (c *Client) Delete(ctx context.Context, sessionID [16]byte, sequence uint64
 // Get returns the latest linearizable Value stored under key.
 func (c *Client) Get(ctx context.Context, key string) ([]byte, error) {
 	var value []byte
-	err := c.withLeader(ctx, func(client quorumkvv1.ClientServiceClient) error {
-		response, err := client.Get(ctx, &quorumkvv1.GetRequest{Key: key})
+	err := c.withLeader(ctx, func(client ternionv1.ClientServiceClient) error {
+		response, err := client.Get(ctx, &ternionv1.GetRequest{Key: key})
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func (c *Client) Get(ctx context.Context, key string) ([]byte, error) {
 	return value, err
 }
 
-func (c *Client) withLeader(ctx context.Context, call func(quorumkvv1.ClientServiceClient) error) error {
+func (c *Client) withLeader(ctx context.Context, call func(ternionv1.ClientServiceClient) error) error {
 	if len(c.addresses) == 0 {
 		return fmt.Errorf("at least one Node address is required")
 	}
@@ -113,7 +113,7 @@ func (c *Client) withLeader(ctx context.Context, call func(quorumkvv1.ClientServ
 		if err != nil {
 			return fmt.Errorf("connect to Node at %q: %w", address, err)
 		}
-		err = call(quorumkvv1.NewClientServiceClient(connection))
+		err = call(ternionv1.NewClientServiceClient(connection))
 		closeErr := connection.Close()
 		if err == nil {
 			if closeErr != nil {
@@ -146,7 +146,7 @@ func (c *Client) withLeader(ctx context.Context, call func(quorumkvv1.ClientServ
 
 func leaderHint(err error) (string, bool) {
 	for _, detail := range status.Convert(err).Details() {
-		notLeader, ok := detail.(*quorumkvv1.NotLeader)
+		notLeader, ok := detail.(*ternionv1.NotLeader)
 		if ok && notLeader.LeaderAddress != "" {
 			return notLeader.LeaderAddress, true
 		}

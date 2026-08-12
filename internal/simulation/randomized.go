@@ -9,7 +9,7 @@ import (
 	"reflect"
 	"sort"
 
-	"github.com/darshmahadevia/quorumkv/internal/raft"
+	"github.com/darshmahadevia/ternion/internal/raft"
 )
 
 // RandomConfig bounds one seeded fault simulation.

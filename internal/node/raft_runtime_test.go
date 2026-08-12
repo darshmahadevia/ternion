@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/darshmahadevia/quorumkv/internal/config"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
-	"github.com/darshmahadevia/quorumkv/internal/snapshot"
-	"github.com/darshmahadevia/quorumkv/internal/wal"
+	"github.com/darshmahadevia/ternion/internal/config"
+	"github.com/darshmahadevia/ternion/internal/raft"
+	"github.com/darshmahadevia/ternion/internal/snapshot"
+	"github.com/darshmahadevia/ternion/internal/wal"
 )
 
 func TestProcessRestartDoesNotGrantSecondVoteInTerm(t *testing.T) {
@@ -231,9 +231,9 @@ func runVoteProcess(t *testing.T, directory, candidate string) string {
 	}
 	command := exec.Command(executable, "-test.run=^TestVoteProcessHelper$")
 	command.Env = append(os.Environ(),
-		"QUORUMKV_VOTE_HELPER=1",
-		"QUORUMKV_DATA_DIR="+directory,
-		"QUORUMKV_CANDIDATE="+candidate,
+		"TERNION_VOTE_HELPER=1",
+		"TERNION_DATA_DIR="+directory,
+		"TERNION_CANDIDATE="+candidate,
 	)
 	output, err := command.CombinedOutput()
 	if err != nil {
@@ -243,14 +243,14 @@ func runVoteProcess(t *testing.T, directory, candidate string) string {
 }
 
 func TestVoteProcessHelper(t *testing.T) {
-	if os.Getenv("QUORUMKV_VOTE_HELPER") != "1" {
+	if os.Getenv("TERNION_VOTE_HELPER") != "1" {
 		return
 	}
 	runtime, err := openRaftRuntime(config.Config{
 		ClusterID: "cluster-1",
 		Node: config.Node{
 			ID:      "node-1",
-			DataDir: os.Getenv("QUORUMKV_DATA_DIR"),
+			DataDir: os.Getenv("TERNION_DATA_DIR"),
 		},
 	}, []raft.NodeID{"candidate-a", "candidate-b"})
 	if err != nil {
@@ -258,7 +258,7 @@ func TestVoteProcessHelper(t *testing.T) {
 		os.Exit(2)
 	}
 	actions, err := runtime.step(raft.VoteRequest{
-		From: raft.NodeID(os.Getenv("QUORUMKV_CANDIDATE")),
+		From: raft.NodeID(os.Getenv("TERNION_CANDIDATE")),
 		Term: 7,
 	})
 	if err != nil {

@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/darshmahadevia/quorumkv/internal/config"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
-	"github.com/darshmahadevia/quorumkv/internal/snapshot"
-	"github.com/darshmahadevia/quorumkv/internal/wal"
+	"github.com/darshmahadevia/ternion/internal/config"
+	"github.com/darshmahadevia/ternion/internal/raft"
+	"github.com/darshmahadevia/ternion/internal/snapshot"
+	"github.com/darshmahadevia/ternion/internal/wal"
 )
 
 // raftRuntime owns the synchronous boundary between deterministic election

@@ -3,8 +3,8 @@ package node
 import (
 	"context"
 
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/raft"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -16,7 +16,7 @@ const (
 
 // Set stores an opaque Value after its command is durably committed and
 // applied. Cancellation only stops waiting; it cannot retract a proposal.
-func (n *Node) Set(ctx context.Context, request *quorumkvv1.SetRequest) (*quorumkvv1.SetResponse, error) {
+func (n *Node) Set(ctx context.Context, request *ternionv1.SetRequest) (*ternionv1.SetResponse, error) {
 	if err := validateMutation(request.SessionId, request.Sequence, request.Key); err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (n *Node) Set(ctx context.Context, request *quorumkvv1.SetRequest) (*quorum
 	if err := n.proposalError(result); err != nil {
 		return nil, err
 	}
-	return &quorumkvv1.SetResponse{}, nil
+	return &ternionv1.SetResponse{}, nil
 }
 
 func (n *Node) propose(ctx context.Context, event raft.Event) (proposalResult, error) {

@@ -8,8 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/darshmahadevia/quorumkv/internal/config"
-	"github.com/darshmahadevia/quorumkv/internal/node"
+	"github.com/darshmahadevia/ternion/internal/config"
+	"github.com/darshmahadevia/ternion/internal/node"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 }
 
 func run() error {
-	configPath := flag.String("config", "quorumkv.yaml", "path to the node YAML configuration")
+	configPath := flag.String("config", "ternion.yaml", "path to the node YAML configuration")
 	flag.Parse()
 
 	cfg, err := config.Load(*configPath)

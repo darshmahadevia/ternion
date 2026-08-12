@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/darshmahadevia/quorumkv/internal/snapshot"
+	"github.com/darshmahadevia/ternion/internal/snapshot"
 )
 
 func TestSaveAndLoadNewestCompatibleSnapshot(t *testing.T) {

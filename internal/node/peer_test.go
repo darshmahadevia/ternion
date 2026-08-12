@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/config"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/config"
+	"github.com/darshmahadevia/ternion/internal/raft"
 )
 
 func TestHandshakeRejectsIncompatiblePeerIdentity(t *testing.T) {
@@ -22,20 +22,20 @@ func TestHandshakeRejectsIncompatiblePeerIdentity(t *testing.T) {
 			"node-3": {},
 		},
 	})
-	valid := func() *quorumkvv1.HandshakeRequest {
-		return &quorumkvv1.HandshakeRequest{ProtocolVersion: peerProtocolVersion, ClusterId: "cluster-1", NodeId: "node-2", TargetNodeId: "node-1", ActiveSessionLimit: 10}
+	valid := func() *ternionv1.HandshakeRequest {
+		return &ternionv1.HandshakeRequest{ProtocolVersion: peerProtocolVersion, ClusterId: "cluster-1", NodeId: "node-2", TargetNodeId: "node-1", ActiveSessionLimit: 10}
 	}
 
 	tests := []struct {
 		name   string
-		change func(*quorumkvv1.HandshakeRequest)
+		change func(*ternionv1.HandshakeRequest)
 		detail string
 	}{
-		{name: "protocol version", change: func(request *quorumkvv1.HandshakeRequest) { request.ProtocolVersion++ }, detail: "require version 1"},
-		{name: "Cluster Identity", change: func(request *quorumkvv1.HandshakeRequest) { request.ClusterId = "other-cluster" }, detail: "does not match"},
-		{name: "unknown Node Identity", change: func(request *quorumkvv1.HandshakeRequest) { request.NodeId = "node-4" }, detail: "not a configured Cluster member"},
-		{name: "target Node Identity", change: func(request *quorumkvv1.HandshakeRequest) { request.TargetNodeId = "node-3" }, detail: "targeted Node"},
-		{name: "active Client Session limit", change: func(request *quorumkvv1.HandshakeRequest) { request.ActiveSessionLimit++ }, detail: "does not match"},
+		{name: "protocol version", change: func(request *ternionv1.HandshakeRequest) { request.ProtocolVersion++ }, detail: "require version 1"},
+		{name: "Cluster Identity", change: func(request *ternionv1.HandshakeRequest) { request.ClusterId = "other-cluster" }, detail: "does not match"},
+		{name: "unknown Node Identity", change: func(request *ternionv1.HandshakeRequest) { request.NodeId = "node-4" }, detail: "not a configured Cluster member"},
+		{name: "target Node Identity", change: func(request *ternionv1.HandshakeRequest) { request.TargetNodeId = "node-3" }, detail: "targeted Node"},
+		{name: "active Client Session limit", change: func(request *ternionv1.HandshakeRequest) { request.ActiveSessionLimit++ }, detail: "does not match"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -94,12 +94,12 @@ func TestPeerSendReturnsAfterQueueingWithoutWaitingForRuntime(t *testing.T) {
 			"node-3": {},
 		},
 	})
-	request := &quorumkvv1.SendRequest{
+	request := &ternionv1.SendRequest{
 		ProtocolVersion: peerProtocolVersion,
 		ClusterId:       "cluster-1",
 		FromNodeId:      "node-2",
 		ToNodeId:        "node-1",
-		Message: &quorumkvv1.SendRequest_PreVoteRequest{PreVoteRequest: &quorumkvv1.PreVoteRequest{
+		Message: &ternionv1.SendRequest_PreVoteRequest{PreVoteRequest: &ternionv1.PreVoteRequest{
 			Term: 1,
 		}},
 	}

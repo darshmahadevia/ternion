@@ -15,13 +15,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/darshmahadevia/quorumkv/client"
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/cli"
-	"github.com/darshmahadevia/quorumkv/internal/config"
-	"github.com/darshmahadevia/quorumkv/internal/node"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
-	"github.com/darshmahadevia/quorumkv/internal/wal"
+	"github.com/darshmahadevia/ternion/client"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/cli"
+	"github.com/darshmahadevia/ternion/internal/config"
+	"github.com/darshmahadevia/ternion/internal/node"
+	"github.com/darshmahadevia/ternion/internal/raft"
+	"github.com/darshmahadevia/ternion/internal/wal"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -73,7 +73,7 @@ func TestLostSetResponseIsDeduplicatedAfterLeaderFailover(t *testing.T) {
 		t.Fatalf("connect to response-dropping proxy: %v", err)
 	}
 	requestCtx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-	_, err = quorumkvv1.NewClientServiceClient(connection).Set(requestCtx, &quorumkvv1.SetRequest{
+	_, err = ternionv1.NewClientServiceClient(connection).Set(requestCtx, &ternionv1.SetRequest{
 		SessionId: sessionID[:], Sequence: 1, Key: "deduplicated", Value: []byte("original"),
 	})
 	cancel()
@@ -111,7 +111,7 @@ func TestLostSetResponseIsDeduplicatedAfterLeaderFailover(t *testing.T) {
 		t.Fatalf("connect to isolated Leader: %v", err)
 	}
 	requestCtx, cancel = context.WithTimeout(context.Background(), time.Second)
-	_, err = quorumkvv1.NewClientServiceClient(connection).Set(requestCtx, &quorumkvv1.SetRequest{
+	_, err = ternionv1.NewClientServiceClient(connection).Set(requestCtx, &ternionv1.SetRequest{
 		SessionId: sessionID[:], Sequence: 3, Key: "must-not-start", Value: []byte("value"),
 	})
 	cancel()
@@ -151,17 +151,17 @@ func TestLostSetResponseIsDeduplicatedAfterLeaderFailover(t *testing.T) {
 }
 
 type lostSetResponseProxy struct {
-	quorumkvv1.UnimplementedClientServiceServer
+	ternionv1.UnimplementedClientServiceServer
 	target string
 }
 
-func (p *lostSetResponseProxy) Set(ctx context.Context, request *quorumkvv1.SetRequest) (*quorumkvv1.SetResponse, error) {
+func (p *lostSetResponseProxy) Set(ctx context.Context, request *ternionv1.SetRequest) (*ternionv1.SetResponse, error) {
 	connection, err := grpc.NewClient(p.target, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
 	defer connection.Close()
-	if _, err := quorumkvv1.NewClientServiceClient(connection).Set(ctx, request); err != nil {
+	if _, err := ternionv1.NewClientServiceClient(connection).Set(ctx, request); err != nil {
 		return nil, err
 	}
 	return nil, status.Error(codes.Unavailable, "test proxy dropped the successful SET response")
@@ -174,7 +174,7 @@ func startLostSetResponseProxy(t *testing.T, target string) (string, func()) {
 		t.Fatalf("listen for response-dropping proxy: %v", err)
 	}
 	server := grpc.NewServer()
-	quorumkvv1.RegisterClientServiceServer(server, &lostSetResponseProxy{target: target})
+	ternionv1.RegisterClientServiceServer(server, &lostSetResponseProxy{target: target})
 	done := make(chan struct{})
 	go func() {
 		defer close(done)
@@ -188,7 +188,7 @@ func startLostSetResponseProxy(t *testing.T, target string) (string, func()) {
 
 func hasOutOfOrderSequenceDetail(err error, received, next uint64) bool {
 	for _, detail := range status.Convert(err).Details() {
-		outOfOrder, ok := detail.(*quorumkvv1.OutOfOrderSequence)
+		outOfOrder, ok := detail.(*ternionv1.OutOfOrderSequence)
 		if ok && outOfOrder.ReceivedSequence == received && outOfOrder.NextSequence == next {
 			return true
 		}
@@ -243,7 +243,7 @@ func TestThreeProcessesSetThroughCLIAndElectReplacementLeader(t *testing.T) {
 		t.Fatalf("connect to Leader for public validation check: %v", err)
 	}
 	requestCtx, cancel = context.WithTimeout(context.Background(), 5*time.Second)
-	_, err = quorumkvv1.NewClientServiceClient(connection).Set(requestCtx, &quorumkvv1.SetRequest{
+	_, err = ternionv1.NewClientServiceClient(connection).Set(requestCtx, &ternionv1.SetRequest{
 		SessionId: sessionID[:], Sequence: 1, Key: "opaque", Value: make([]byte, (1<<20)+1),
 	})
 	cancel()
@@ -330,7 +330,7 @@ func TestThreeProcessesSetThroughCLIAndElectReplacementLeader(t *testing.T) {
 		t.Fatalf("close replicated Client Session after Leader change: %v", err)
 	}
 	deleteOutput, err = runCLIDelete(replacementFollower.ClientAddress, sessionID, 6, "empty", 5*time.Second)
-	if status.Code(err) != codes.FailedPrecondition || !hasInvalidSessionDetail(err, quorumkvv1.InvalidSessionReason_INVALID_SESSION_REASON_CLOSED) {
+	if status.Code(err) != codes.FailedPrecondition || !hasInvalidSessionDetail(err, ternionv1.InvalidSessionReason_INVALID_SESSION_REASON_CLOSED) {
 		t.Fatalf("DELETE with closed Client Session output = %q, error = %v; want typed closed Session", deleteOutput, err)
 	}
 
@@ -400,7 +400,7 @@ func runCLIDelete(address string, sessionID [16]byte, sequence uint64, key strin
 
 func hasValidationDetail(err error, field string) bool {
 	for _, detail := range status.Convert(err).Details() {
-		validation, ok := detail.(*quorumkvv1.ValidationError)
+		validation, ok := detail.(*ternionv1.ValidationError)
 		if ok && validation.Field == field {
 			return true
 		}
@@ -410,7 +410,7 @@ func hasValidationDetail(err error, field string) bool {
 
 func hasKeyNotFoundDetail(err error, key string) bool {
 	for _, detail := range status.Convert(err).Details() {
-		notFound, ok := detail.(*quorumkvv1.KeyNotFound)
+		notFound, ok := detail.(*ternionv1.KeyNotFound)
 		if ok && notFound.Key == key {
 			return true
 		}
@@ -418,9 +418,9 @@ func hasKeyNotFoundDetail(err error, key string) bool {
 	return false
 }
 
-func hasInvalidSessionDetail(err error, reason quorumkvv1.InvalidSessionReason) bool {
+func hasInvalidSessionDetail(err error, reason ternionv1.InvalidSessionReason) bool {
 	for _, detail := range status.Convert(err).Details() {
-		invalid, ok := detail.(*quorumkvv1.InvalidSession)
+		invalid, ok := detail.(*ternionv1.InvalidSession)
 		if ok && invalid.Reason == reason {
 			return true
 		}
@@ -451,7 +451,7 @@ func memberOtherThan(t *testing.T, members map[string]config.Member, excluded ma
 }
 
 func TestNodeProcessHelper(t *testing.T) {
-	path := os.Getenv("QUORUMKV_NODE_PROCESS_CONFIG")
+	path := os.Getenv("TERNION_NODE_PROCESS_CONFIG")
 	if path == "" {
 		return
 	}
@@ -489,7 +489,7 @@ func startNodeProcess(t *testing.T, cfg config.Config) *nodeProcess {
 	}
 	process := &nodeProcess{done: make(chan error, 1)}
 	process.command = exec.Command(executable, "-test.run=^TestNodeProcessHelper$")
-	process.command.Env = append(os.Environ(), "QUORUMKV_NODE_PROCESS_CONFIG="+path)
+	process.command.Env = append(os.Environ(), "TERNION_NODE_PROCESS_CONFIG="+path)
 	process.command.Stdout = &process.output
 	process.command.Stderr = &process.output
 	if err := process.command.Start(); err != nil {
@@ -514,9 +514,9 @@ func (p *nodeProcess) stop() {
 func waitForSingleLeader(t *testing.T, members map[string]config.Member, excluded map[string]bool, timeout time.Duration) string {
 	t.Helper()
 	deadline := time.Now().Add(timeout)
-	var observed map[string]*quorumkvv1.GetStatusResponse
+	var observed map[string]*ternionv1.GetStatusResponse
 	for time.Now().Before(deadline) {
-		observed = make(map[string]*quorumkvv1.GetStatusResponse)
+		observed = make(map[string]*ternionv1.GetStatusResponse)
 		for id, member := range members {
 			if excluded[id] {
 				continue
@@ -528,7 +528,7 @@ func waitForSingleLeader(t *testing.T, members map[string]config.Member, exclude
 		var leader string
 		leaders := 0
 		for id, status := range observed {
-			if status.Role == quorumkvv1.RaftRole_RAFT_ROLE_LEADER {
+			if status.Role == ternionv1.RaftRole_RAFT_ROLE_LEADER {
 				leader = id
 				leaders++
 			}
@@ -571,7 +571,7 @@ func waitForStableLeader(t *testing.T, members map[string]config.Member, exclude
 
 const checkQuorumObservationWindow = 1200 * time.Millisecond
 
-func fetchStatus(address string) *quorumkvv1.GetStatusResponse {
+func fetchStatus(address string) *ternionv1.GetStatusResponse {
 	connection, err := grpc.NewClient(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil
@@ -579,7 +579,7 @@ func fetchStatus(address string) *quorumkvv1.GetStatusResponse {
 	defer connection.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
-	status, err := quorumkvv1.NewNodeServiceClient(connection).GetStatus(ctx, &quorumkvv1.GetStatusRequest{})
+	status, err := ternionv1.NewNodeServiceClient(connection).GetStatus(ctx, &ternionv1.GetStatusRequest{})
 	if err != nil {
 		return nil
 	}

@@ -12,9 +12,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/config"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/config"
+	"github.com/darshmahadevia/ternion/internal/raft"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/health"
 	"google.golang.org/grpc/health/grpc_health_v1"
@@ -23,8 +23,8 @@ import (
 const (
 	// LivenessService and ReadinessService are separate health-check names so
 	// operators do not mistake local process health for readiness to accept RPCs.
-	LivenessService  = "quorumkv.v1.Liveness"
-	ReadinessService = "quorumkv.v1.Readiness"
+	LivenessService  = "ternion.v1.Liveness"
+	ReadinessService = "ternion.v1.Readiness"
 
 	shutdownGracePeriod = 5 * time.Second
 )
@@ -32,9 +32,9 @@ const (
 // Node owns the local listeners and gRPC servers for one configured process.
 // Run must be called at most once.
 type Node struct {
-	quorumkvv1.UnimplementedNodeServiceServer
-	quorumkvv1.UnimplementedClientServiceServer
-	quorumkvv1.UnimplementedPeerServiceServer
+	ternionv1.UnimplementedNodeServiceServer
+	ternionv1.UnimplementedClientServiceServer
+	ternionv1.UnimplementedPeerServiceServer
 
 	config          config.Config
 	ready           atomic.Bool
@@ -122,9 +122,9 @@ func (n *Node) Run(ctx context.Context) (runErr error) {
 	healthServer.SetServingStatus(LivenessService, grpc_health_v1.HealthCheckResponse_SERVING)
 	healthServer.SetServingStatus(ReadinessService, grpc_health_v1.HealthCheckResponse_NOT_SERVING)
 	grpc_health_v1.RegisterHealthServer(clientServer, healthServer)
-	quorumkvv1.RegisterNodeServiceServer(clientServer, n)
-	quorumkvv1.RegisterClientServiceServer(clientServer, n)
-	quorumkvv1.RegisterPeerServiceServer(peerServer, n)
+	ternionv1.RegisterNodeServiceServer(clientServer, n)
+	ternionv1.RegisterClientServiceServer(clientServer, n)
+	ternionv1.RegisterPeerServiceServer(peerServer, n)
 
 	runCtx, cancel := context.WithCancel(ctx)
 	defer cancel()
@@ -203,14 +203,14 @@ func stopServers(servers ...*grpc.Server) {
 }
 
 // GetStatus reports only local process state; it makes no Cluster health claim.
-func (n *Node) GetStatus(context.Context, *quorumkvv1.GetStatusRequest) (*quorumkvv1.GetStatusResponse, error) {
-	state := quorumkvv1.NodeState_NODE_STATE_STARTING
+func (n *Node) GetStatus(context.Context, *ternionv1.GetStatusRequest) (*ternionv1.GetStatusResponse, error) {
+	state := ternionv1.NodeState_NODE_STATE_STARTING
 	if n.ready.Load() {
-		state = quorumkvv1.NodeState_NODE_STATE_READY
+		state = ternionv1.NodeState_NODE_STATE_READY
 	}
 	local := n.config.LocalMember()
 	raftState := n.raftState.Load().(raft.State)
-	return &quorumkvv1.GetStatusResponse{
+	return &ternionv1.GetStatusResponse{
 		ClusterId:     n.config.ClusterID,
 		NodeId:        n.config.Node.ID,
 		State:         state,
@@ -243,17 +243,17 @@ func (n *Node) metricsInterceptor(ctx context.Context, req any, info *grpc.Unary
 	return response, err
 }
 
-func encodeRole(role raft.Role) quorumkvv1.RaftRole {
+func encodeRole(role raft.Role) ternionv1.RaftRole {
 	switch role {
 	case raft.Follower:
-		return quorumkvv1.RaftRole_RAFT_ROLE_FOLLOWER
+		return ternionv1.RaftRole_RAFT_ROLE_FOLLOWER
 	case raft.PreCandidate:
-		return quorumkvv1.RaftRole_RAFT_ROLE_PRE_CANDIDATE
+		return ternionv1.RaftRole_RAFT_ROLE_PRE_CANDIDATE
 	case raft.Candidate:
-		return quorumkvv1.RaftRole_RAFT_ROLE_CANDIDATE
+		return ternionv1.RaftRole_RAFT_ROLE_CANDIDATE
 	case raft.Leader:
-		return quorumkvv1.RaftRole_RAFT_ROLE_LEADER
+		return ternionv1.RaftRole_RAFT_ROLE_LEADER
 	default:
-		return quorumkvv1.RaftRole_RAFT_ROLE_UNSPECIFIED
+		return ternionv1.RaftRole_RAFT_ROLE_UNSPECIFIED
 	}
 }

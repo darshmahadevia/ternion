@@ -5,8 +5,8 @@ import (
 	"crypto/rand"
 	"fmt"
 
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/raft"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -157,7 +157,7 @@ func (m *sessionMachine) get(key string) ([]byte, bool) {
 	return append([]byte(nil), value...), exists
 }
 
-func (n *Node) OpenSession(ctx context.Context, _ *quorumkvv1.OpenSessionRequest) (*quorumkvv1.OpenSessionResponse, error) {
+func (n *Node) OpenSession(ctx context.Context, _ *ternionv1.OpenSessionRequest) (*ternionv1.OpenSessionResponse, error) {
 	if result, rejected := n.rejectIfNotLeader(); rejected {
 		return nil, n.proposalError(result)
 	}
@@ -169,10 +169,10 @@ func (n *Node) OpenSession(ctx context.Context, _ *quorumkvv1.OpenSessionRequest
 	if err != nil {
 		return nil, err
 	}
-	return &quorumkvv1.OpenSessionResponse{SessionId: result.sessionID[:]}, nil
+	return &ternionv1.OpenSessionResponse{SessionId: result.sessionID[:]}, nil
 }
 
-func (n *Node) CloseSession(ctx context.Context, request *quorumkvv1.CloseSessionRequest) (*quorumkvv1.CloseSessionResponse, error) {
+func (n *Node) CloseSession(ctx context.Context, request *ternionv1.CloseSessionRequest) (*ternionv1.CloseSessionResponse, error) {
 	if len(request.SessionId) != len(raft.SessionID{}) {
 		return nil, validationError("session_id", "Client Session identity is %d bytes, want 16", len(request.SessionId))
 	}
@@ -184,7 +184,7 @@ func (n *Node) CloseSession(ctx context.Context, request *quorumkvv1.CloseSessio
 	if _, err := n.proposeSession(ctx, raft.EntryCloseSession, sessionID); err != nil {
 		return nil, err
 	}
-	return &quorumkvv1.CloseSessionResponse{}, nil
+	return &ternionv1.CloseSessionResponse{}, nil
 }
 
 func (n *Node) rejectIfNotLeader() (proposalResult, bool) {
@@ -214,7 +214,7 @@ func (n *Node) proposalError(result proposalResult) error {
 			return status.Errorf(codes.Unavailable, "Leader %q is not in the configured member map", result.leaderID)
 		}
 		base := status.New(codes.FailedPrecondition, fmt.Sprintf("Node %q is not the Leader; retry Node %q", n.config.Node.ID, result.leaderID))
-		withDetails, err := base.WithDetails(&quorumkvv1.NotLeader{LeaderId: string(result.leaderID), LeaderAddress: leader.ClientAddress})
+		withDetails, err := base.WithDetails(&ternionv1.NotLeader{LeaderId: string(result.leaderID), LeaderAddress: leader.ClientAddress})
 		if err != nil {
 			return base.Err()
 		}
@@ -227,14 +227,14 @@ func (n *Node) proposalError(result proposalResult) error {
 		return status.Errorf(codes.ResourceExhausted, "active Client Session limit %d reached", n.config.ActiveSessionLimit)
 	case sessionUnknown:
 		base := status.New(codes.NotFound, "Client Session is unknown")
-		withDetails, err := base.WithDetails(&quorumkvv1.InvalidSession{SessionId: result.sessionID[:], Reason: quorumkvv1.InvalidSessionReason_INVALID_SESSION_REASON_UNKNOWN})
+		withDetails, err := base.WithDetails(&ternionv1.InvalidSession{SessionId: result.sessionID[:], Reason: ternionv1.InvalidSessionReason_INVALID_SESSION_REASON_UNKNOWN})
 		if err != nil {
 			return base.Err()
 		}
 		return withDetails.Err()
 	case sessionClosed:
 		base := status.New(codes.FailedPrecondition, "Client Session is closed and cannot be reused")
-		withDetails, err := base.WithDetails(&quorumkvv1.InvalidSession{SessionId: result.sessionID[:], Reason: quorumkvv1.InvalidSessionReason_INVALID_SESSION_REASON_CLOSED})
+		withDetails, err := base.WithDetails(&ternionv1.InvalidSession{SessionId: result.sessionID[:], Reason: ternionv1.InvalidSessionReason_INVALID_SESSION_REASON_CLOSED})
 		if err != nil {
 			return base.Err()
 		}
@@ -243,14 +243,14 @@ func (n *Node) proposalError(result proposalResult) error {
 		return status.Error(codes.AlreadyExists, "Client Session identity was already used and cannot be reopened")
 	case sessionStaleSequence:
 		base := status.New(codes.FailedPrecondition, fmt.Sprintf("mutation sequence %d is stale; latest is %d", result.sequence, result.wantSequence))
-		withDetails, err := base.WithDetails(&quorumkvv1.StaleSequence{ReceivedSequence: result.sequence, LastSequence: result.wantSequence})
+		withDetails, err := base.WithDetails(&ternionv1.StaleSequence{ReceivedSequence: result.sequence, LastSequence: result.wantSequence})
 		if err != nil {
 			return base.Err()
 		}
 		return withDetails.Err()
 	case sessionOutOfOrderSequence:
 		base := status.New(codes.FailedPrecondition, fmt.Sprintf("mutation sequence %d is out of order; next is %d", result.sequence, result.wantSequence))
-		withDetails, err := base.WithDetails(&quorumkvv1.OutOfOrderSequence{ReceivedSequence: result.sequence, NextSequence: result.wantSequence})
+		withDetails, err := base.WithDetails(&ternionv1.OutOfOrderSequence{ReceivedSequence: result.sequence, NextSequence: result.wantSequence})
 		if err != nil {
 			return base.Err()
 		}

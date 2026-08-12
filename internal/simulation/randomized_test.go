@@ -7,7 +7,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/darshmahadevia/quorumkv/internal/simulation"
+	"github.com/darshmahadevia/ternion/internal/simulation"
 )
 
 func TestRandomizedFaultScheduleIsReplayableAndCoversAllowedFaults(t *testing.T) {
@@ -74,7 +74,7 @@ func TestRandomizedFaultSchedulesPreserveInvariantsAcrossSeeds(t *testing.T) {
 			t.Parallel()
 			result, err := simulation.RunRandomized(simulation.RandomConfig{Seed: seed, Steps: 500})
 			if err != nil {
-				t.Fatalf("run seed %d (replay: go run ./cmd/quorumkvsim -seed %d -steps 500): %v\nlast trace event: %#v", seed, seed, err, lastTrace(result))
+				t.Fatalf("run seed %d (replay: go run ./cmd/ternionsim -seed %d -steps 500): %v\nlast trace event: %#v", seed, seed, err, lastTrace(result))
 			}
 		})
 	}

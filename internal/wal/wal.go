@@ -1,4 +1,4 @@
-// Package wal persists the consensus state owned by one QuorumKV Node.
+// Package wal persists the consensus state owned by one Ternion Node.
 package wal
 
 import (

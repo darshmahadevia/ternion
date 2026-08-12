@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/darshmahadevia/quorumkv/internal/config"
+	"github.com/darshmahadevia/ternion/internal/config"
 )
 
 func TestLoadValidConfig(t *testing.T) {

@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package quorumkv.v1;
+package ternion.v1;
 
-option go_package = "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1;quorumkvv1";
+option go_package = "github.com/darshmahadevia/ternion/gen/ternion/v1;ternionv1";
 
 service NodeService {
   rpc GetStatus(GetStatusRequest) returns (GetStatusResponse);

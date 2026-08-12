@@ -7,10 +7,10 @@ import (
 	"hash/crc32"
 	"time"
 
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/config"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
-	"github.com/darshmahadevia/quorumkv/internal/snapshot"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/config"
+	"github.com/darshmahadevia/ternion/internal/raft"
+	"github.com/darshmahadevia/ternion/internal/snapshot"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
@@ -22,14 +22,14 @@ const (
 	peerRPCTimeout      = 250 * time.Millisecond
 )
 
-func (n *Node) Handshake(_ context.Context, request *quorumkvv1.HandshakeRequest) (*quorumkvv1.HandshakeResponse, error) {
+func (n *Node) Handshake(_ context.Context, request *ternionv1.HandshakeRequest) (*ternionv1.HandshakeResponse, error) {
 	if err := n.validatePeer(request.ProtocolVersion, request.ClusterId, request.NodeId, request.TargetNodeId); err != nil {
 		return nil, err
 	}
 	if request.ActiveSessionLimit != uint32(n.config.ActiveSessionLimit) {
 		return nil, status.Errorf(codes.FailedPrecondition, "peer active Client Session limit %d does not match Node %q limit %d", request.ActiveSessionLimit, n.config.Node.ID, n.config.ActiveSessionLimit)
 	}
-	return &quorumkvv1.HandshakeResponse{
+	return &ternionv1.HandshakeResponse{
 		ProtocolVersion:    peerProtocolVersion,
 		ClusterId:          n.config.ClusterID,
 		NodeId:             n.config.Node.ID,
@@ -37,7 +37,7 @@ func (n *Node) Handshake(_ context.Context, request *quorumkvv1.HandshakeRequest
 	}, nil
 }
 
-func (n *Node) Send(ctx context.Context, request *quorumkvv1.SendRequest) (*quorumkvv1.SendResponse, error) {
+func (n *Node) Send(ctx context.Context, request *ternionv1.SendRequest) (*ternionv1.SendResponse, error) {
 	if err := n.validatePeer(request.ProtocolVersion, request.ClusterId, request.FromNodeId, request.ToNodeId); err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func (n *Node) Send(ctx context.Context, request *quorumkvv1.SendRequest) (*quor
 	input := raftInput{event: event}
 	select {
 	case n.events <- input:
-		return &quorumkvv1.SendResponse{}, nil
+		return &ternionv1.SendResponse{}, nil
 	case <-n.runtimeDone:
 		return nil, status.Error(codes.Unavailable, "target Node is stopping")
 	case <-ctx.Done():
@@ -80,7 +80,7 @@ func (n *Node) validatePeer(version uint32, clusterID, fromNodeID, targetNodeID 
 
 type peerClient struct {
 	connection *grpc.ClientConn
-	client     quorumkvv1.PeerServiceClient
+	client     ternionv1.PeerServiceClient
 }
 
 type peerConfigurationError struct{ err error }
@@ -147,7 +147,7 @@ func (t *peerTransport) sendSnapshot(ctx context.Context, action raft.SendInstal
 	}
 	requestCtx, cancel := context.WithTimeout(ctx, peerRPCTimeout)
 	defer cancel()
-	_, err = client.client.Send(requestCtx, &quorumkvv1.SendRequest{ProtocolVersion: peerProtocolVersion, ClusterId: t.config.ClusterID, FromNodeId: t.config.Node.ID, ToNodeId: string(action.To), Message: &quorumkvv1.SendRequest_InstallSnapshotRequest{InstallSnapshotRequest: &quorumkvv1.InstallSnapshotRequest{Term: action.Term, RequestId: action.RequestID, SnapshotIndex: action.SnapshotIndex, SnapshotTerm: action.SnapshotTerm, SnapshotLength: uint64(len(contents)), SnapshotChecksum: crc32.ChecksumIEEE(contents), Offset: action.Offset, Data: append([]byte(nil), contents[action.Offset:end]...), Done: end == uint64(len(contents))}}})
+	_, err = client.client.Send(requestCtx, &ternionv1.SendRequest{ProtocolVersion: peerProtocolVersion, ClusterId: t.config.ClusterID, FromNodeId: t.config.Node.ID, ToNodeId: string(action.To), Message: &ternionv1.SendRequest_InstallSnapshotRequest{InstallSnapshotRequest: &ternionv1.InstallSnapshotRequest{Term: action.Term, RequestId: action.RequestID, SnapshotIndex: action.SnapshotIndex, SnapshotTerm: action.SnapshotTerm, SnapshotLength: uint64(len(contents)), SnapshotChecksum: crc32.ChecksumIEEE(contents), Offset: action.Offset, Data: append([]byte(nil), contents[action.Offset:end]...), Done: end == uint64(len(contents))}}})
 	if err != nil {
 		return fmt.Errorf("send snapshot chunk to Node %q: %w", action.To, err)
 	}
@@ -166,10 +166,10 @@ func (t *peerTransport) client(ctx context.Context, id raft.NodeID) (*peerClient
 	if err != nil {
 		return nil, fmt.Errorf("create peer client for Node %q at %q: %w", id, member.PeerAddress, err)
 	}
-	client := quorumkvv1.NewPeerServiceClient(connection)
+	client := ternionv1.NewPeerServiceClient(connection)
 	requestCtx, cancel := context.WithTimeout(ctx, peerRPCTimeout)
 	defer cancel()
-	response, err := client.Handshake(requestCtx, &quorumkvv1.HandshakeRequest{
+	response, err := client.Handshake(requestCtx, &ternionv1.HandshakeRequest{
 		ProtocolVersion:    peerProtocolVersion,
 		ClusterId:          t.config.ClusterID,
 		NodeId:             t.config.Node.ID,
@@ -203,8 +203,8 @@ func (t *peerTransport) close() error {
 	return first
 }
 
-func encodeRaftAction(cfg config.Config, action raft.Action) (raft.NodeID, *quorumkvv1.SendRequest, error) {
-	request := &quorumkvv1.SendRequest{
+func encodeRaftAction(cfg config.Config, action raft.Action) (raft.NodeID, *ternionv1.SendRequest, error) {
+	request := &ternionv1.SendRequest{
 		ProtocolVersion: peerProtocolVersion,
 		ClusterId:       cfg.ClusterID,
 		FromNodeId:      cfg.Node.ID,
@@ -213,29 +213,29 @@ func encodeRaftAction(cfg config.Config, action raft.Action) (raft.NodeID, *quor
 	switch action := action.(type) {
 	case raft.SendPreVoteRequest:
 		to = action.To
-		request.Message = &quorumkvv1.SendRequest_PreVoteRequest{PreVoteRequest: &quorumkvv1.PreVoteRequest{Term: action.Request.Term, LastLogIndex: action.Request.LastLogIndex, LastLogTerm: action.Request.LastLogTerm}}
+		request.Message = &ternionv1.SendRequest_PreVoteRequest{PreVoteRequest: &ternionv1.PreVoteRequest{Term: action.Request.Term, LastLogIndex: action.Request.LastLogIndex, LastLogTerm: action.Request.LastLogTerm}}
 	case raft.SendPreVoteResponse:
 		to = action.To
-		request.Message = &quorumkvv1.SendRequest_PreVoteResponse{PreVoteResponse: &quorumkvv1.PreVoteResponse{Term: action.Response.Term, CurrentTerm: action.Response.CurrentTerm, Granted: action.Response.Granted}}
+		request.Message = &ternionv1.SendRequest_PreVoteResponse{PreVoteResponse: &ternionv1.PreVoteResponse{Term: action.Response.Term, CurrentTerm: action.Response.CurrentTerm, Granted: action.Response.Granted}}
 	case raft.SendVoteRequest:
 		to = action.To
-		request.Message = &quorumkvv1.SendRequest_VoteRequest{VoteRequest: &quorumkvv1.VoteRequest{Term: action.Request.Term, LastLogIndex: action.Request.LastLogIndex, LastLogTerm: action.Request.LastLogTerm}}
+		request.Message = &ternionv1.SendRequest_VoteRequest{VoteRequest: &ternionv1.VoteRequest{Term: action.Request.Term, LastLogIndex: action.Request.LastLogIndex, LastLogTerm: action.Request.LastLogTerm}}
 	case raft.SendVoteResponse:
 		to = action.To
-		request.Message = &quorumkvv1.SendRequest_VoteResponse{VoteResponse: &quorumkvv1.VoteResponse{Term: action.Response.Term, Granted: action.Response.Granted}}
+		request.Message = &ternionv1.SendRequest_VoteResponse{VoteResponse: &ternionv1.VoteResponse{Term: action.Response.Term, Granted: action.Response.Granted}}
 	case raft.SendAppendEntries:
 		to = action.To
-		entries := make([]*quorumkvv1.RaftLogEntry, len(action.Request.Entries))
+		entries := make([]*ternionv1.RaftLogEntry, len(action.Request.Entries))
 		for index, entry := range action.Request.Entries {
-			entries[index] = &quorumkvv1.RaftLogEntry{Index: entry.Index, Term: entry.Term, Type: encodeEntryType(entry.Type), SessionId: entry.SessionID[:], Sequence: entry.Sequence, Key: entry.Key, Value: entry.Value}
+			entries[index] = &ternionv1.RaftLogEntry{Index: entry.Index, Term: entry.Term, Type: encodeEntryType(entry.Type), SessionId: entry.SessionID[:], Sequence: entry.Sequence, Key: entry.Key, Value: entry.Value}
 		}
-		request.Message = &quorumkvv1.SendRequest_AppendEntriesRequest{AppendEntriesRequest: &quorumkvv1.AppendEntriesRequest{Term: action.Request.Term, RequestId: action.Request.RequestID, PreviousLogIndex: action.Request.PrevLogIndex, PreviousLogTerm: action.Request.PrevLogTerm, Entries: entries, LeaderCommit: action.Request.LeaderCommit, ReadId: uint64(action.Request.ReadID)}}
+		request.Message = &ternionv1.SendRequest_AppendEntriesRequest{AppendEntriesRequest: &ternionv1.AppendEntriesRequest{Term: action.Request.Term, RequestId: action.Request.RequestID, PreviousLogIndex: action.Request.PrevLogIndex, PreviousLogTerm: action.Request.PrevLogTerm, Entries: entries, LeaderCommit: action.Request.LeaderCommit, ReadId: uint64(action.Request.ReadID)}}
 	case raft.SendAppendEntriesResponse:
 		to = action.To
-		request.Message = &quorumkvv1.SendRequest_AppendEntriesResponse{AppendEntriesResponse: &quorumkvv1.AppendEntriesResponse{Term: action.Response.Term, RequestId: action.Response.RequestID, Success: action.Response.Success, MatchIndex: action.Response.MatchIndex, ConflictTerm: action.Response.ConflictTerm, ConflictIndex: action.Response.ConflictIndex, ReadId: uint64(action.Response.ReadID)}}
+		request.Message = &ternionv1.SendRequest_AppendEntriesResponse{AppendEntriesResponse: &ternionv1.AppendEntriesResponse{Term: action.Response.Term, RequestId: action.Response.RequestID, Success: action.Response.Success, MatchIndex: action.Response.MatchIndex, ConflictTerm: action.Response.ConflictTerm, ConflictIndex: action.Response.ConflictIndex, ReadId: uint64(action.Response.ReadID)}}
 	case raft.SendInstallSnapshotResponse:
 		to = action.To
-		request.Message = &quorumkvv1.SendRequest_InstallSnapshotResponse{InstallSnapshotResponse: &quorumkvv1.InstallSnapshotResponse{Term: action.Response.Term, RequestId: action.Response.RequestID, Success: action.Response.Success, NextOffset: action.Response.NextOffset, SnapshotIndex: action.Response.SnapshotIndex, Done: action.Response.Done}}
+		request.Message = &ternionv1.SendRequest_InstallSnapshotResponse{InstallSnapshotResponse: &ternionv1.InstallSnapshotResponse{Term: action.Response.Term, RequestId: action.Response.RequestID, Success: action.Response.Success, NextOffset: action.Response.NextOffset, SnapshotIndex: action.Response.SnapshotIndex, Done: action.Response.Done}}
 	default:
 		return "", nil, fmt.Errorf("encode unsupported Raft action %T", action)
 	}
@@ -243,18 +243,18 @@ func encodeRaftAction(cfg config.Config, action raft.Action) (raft.NodeID, *quor
 	return to, request, nil
 }
 
-func decodeRaftMessage(request *quorumkvv1.SendRequest) (raft.Event, error) {
+func decodeRaftMessage(request *ternionv1.SendRequest) (raft.Event, error) {
 	from := raft.NodeID(request.FromNodeId)
 	switch message := request.Message.(type) {
-	case *quorumkvv1.SendRequest_PreVoteRequest:
+	case *ternionv1.SendRequest_PreVoteRequest:
 		return raft.PreVoteRequest{From: from, Term: message.PreVoteRequest.Term, LastLogIndex: message.PreVoteRequest.LastLogIndex, LastLogTerm: message.PreVoteRequest.LastLogTerm}, nil
-	case *quorumkvv1.SendRequest_PreVoteResponse:
+	case *ternionv1.SendRequest_PreVoteResponse:
 		return raft.PreVoteResponse{From: from, Term: message.PreVoteResponse.Term, CurrentTerm: message.PreVoteResponse.CurrentTerm, Granted: message.PreVoteResponse.Granted}, nil
-	case *quorumkvv1.SendRequest_VoteRequest:
+	case *ternionv1.SendRequest_VoteRequest:
 		return raft.VoteRequest{From: from, Term: message.VoteRequest.Term, LastLogIndex: message.VoteRequest.LastLogIndex, LastLogTerm: message.VoteRequest.LastLogTerm}, nil
-	case *quorumkvv1.SendRequest_VoteResponse:
+	case *ternionv1.SendRequest_VoteResponse:
 		return raft.VoteResponse{From: from, Term: message.VoteResponse.Term, Granted: message.VoteResponse.Granted}, nil
-	case *quorumkvv1.SendRequest_AppendEntriesRequest:
+	case *ternionv1.SendRequest_AppendEntriesRequest:
 		entries := make([]raft.LogEntry, len(message.AppendEntriesRequest.Entries))
 		for index, entry := range message.AppendEntriesRequest.Entries {
 			entryType, err := decodeEntryType(entry.Type)
@@ -272,12 +272,12 @@ func decodeRaftMessage(request *quorumkvv1.SendRequest) (raft.Event, error) {
 			entries[index] = raft.LogEntry{Index: entry.Index, Term: entry.Term, Type: entryType, SessionID: sessionID, Sequence: entry.Sequence, Key: entry.Key, Value: append([]byte(nil), entry.Value...)}
 		}
 		return raft.AppendEntries{From: from, Term: message.AppendEntriesRequest.Term, RequestID: message.AppendEntriesRequest.RequestId, PrevLogIndex: message.AppendEntriesRequest.PreviousLogIndex, PrevLogTerm: message.AppendEntriesRequest.PreviousLogTerm, Entries: entries, LeaderCommit: message.AppendEntriesRequest.LeaderCommit, ReadID: raft.ReadID(message.AppendEntriesRequest.ReadId)}, nil
-	case *quorumkvv1.SendRequest_AppendEntriesResponse:
+	case *ternionv1.SendRequest_AppendEntriesResponse:
 		return raft.AppendEntriesResponse{From: from, Term: message.AppendEntriesResponse.Term, RequestID: message.AppendEntriesResponse.RequestId, Success: message.AppendEntriesResponse.Success, MatchIndex: message.AppendEntriesResponse.MatchIndex, ConflictTerm: message.AppendEntriesResponse.ConflictTerm, ConflictIndex: message.AppendEntriesResponse.ConflictIndex, ReadID: raft.ReadID(message.AppendEntriesResponse.ReadId)}, nil
-	case *quorumkvv1.SendRequest_InstallSnapshotRequest:
+	case *ternionv1.SendRequest_InstallSnapshotRequest:
 		s := message.InstallSnapshotRequest
 		return raft.InstallSnapshot{From: from, Term: s.Term, RequestID: s.RequestId, SnapshotIndex: s.SnapshotIndex, SnapshotTerm: s.SnapshotTerm, Length: s.SnapshotLength, Checksum: s.SnapshotChecksum, Offset: s.Offset, Data: append([]byte(nil), s.Data...), Done: s.Done}, nil
-	case *quorumkvv1.SendRequest_InstallSnapshotResponse:
+	case *ternionv1.SendRequest_InstallSnapshotResponse:
 		s := message.InstallSnapshotResponse
 		return raft.InstallSnapshotResponse{From: from, Term: s.Term, RequestID: s.RequestId, SnapshotIndex: s.SnapshotIndex, Success: s.Success, NextOffset: s.NextOffset, Done: s.Done}, nil
 	default:
@@ -285,33 +285,33 @@ func decodeRaftMessage(request *quorumkvv1.SendRequest) (raft.Event, error) {
 	}
 }
 
-func encodeEntryType(entryType raft.EntryType) quorumkvv1.RaftEntryType {
+func encodeEntryType(entryType raft.EntryType) ternionv1.RaftEntryType {
 	switch entryType {
 	case raft.EntryNoOp:
-		return quorumkvv1.RaftEntryType_RAFT_ENTRY_TYPE_NO_OP
+		return ternionv1.RaftEntryType_RAFT_ENTRY_TYPE_NO_OP
 	case raft.EntryOpenSession:
-		return quorumkvv1.RaftEntryType_RAFT_ENTRY_TYPE_OPEN_SESSION
+		return ternionv1.RaftEntryType_RAFT_ENTRY_TYPE_OPEN_SESSION
 	case raft.EntryCloseSession:
-		return quorumkvv1.RaftEntryType_RAFT_ENTRY_TYPE_CLOSE_SESSION
+		return ternionv1.RaftEntryType_RAFT_ENTRY_TYPE_CLOSE_SESSION
 	case raft.EntrySet:
-		return quorumkvv1.RaftEntryType_RAFT_ENTRY_TYPE_SET
+		return ternionv1.RaftEntryType_RAFT_ENTRY_TYPE_SET
 	case raft.EntryDelete:
-		return quorumkvv1.RaftEntryType_RAFT_ENTRY_TYPE_DELETE
+		return ternionv1.RaftEntryType_RAFT_ENTRY_TYPE_DELETE
 	}
-	return quorumkvv1.RaftEntryType_RAFT_ENTRY_TYPE_UNSPECIFIED
+	return ternionv1.RaftEntryType_RAFT_ENTRY_TYPE_UNSPECIFIED
 }
 
-func decodeEntryType(entryType quorumkvv1.RaftEntryType) (raft.EntryType, error) {
+func decodeEntryType(entryType ternionv1.RaftEntryType) (raft.EntryType, error) {
 	switch entryType {
-	case quorumkvv1.RaftEntryType_RAFT_ENTRY_TYPE_NO_OP:
+	case ternionv1.RaftEntryType_RAFT_ENTRY_TYPE_NO_OP:
 		return raft.EntryNoOp, nil
-	case quorumkvv1.RaftEntryType_RAFT_ENTRY_TYPE_OPEN_SESSION:
+	case ternionv1.RaftEntryType_RAFT_ENTRY_TYPE_OPEN_SESSION:
 		return raft.EntryOpenSession, nil
-	case quorumkvv1.RaftEntryType_RAFT_ENTRY_TYPE_CLOSE_SESSION:
+	case ternionv1.RaftEntryType_RAFT_ENTRY_TYPE_CLOSE_SESSION:
 		return raft.EntryCloseSession, nil
-	case quorumkvv1.RaftEntryType_RAFT_ENTRY_TYPE_SET:
+	case ternionv1.RaftEntryType_RAFT_ENTRY_TYPE_SET:
 		return raft.EntrySet, nil
-	case quorumkvv1.RaftEntryType_RAFT_ENTRY_TYPE_DELETE:
+	case ternionv1.RaftEntryType_RAFT_ENTRY_TYPE_DELETE:
 		return raft.EntryDelete, nil
 	default:
 		return 0, fmt.Errorf("raft entry type %s is unsupported", entryType)

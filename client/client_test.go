@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -45,13 +45,13 @@ func TestSetDoesNotRetrySequenceErrors(t *testing.T) {
 		{
 			name: "stale",
 			sequenceError: func(base *status.Status) (*status.Status, error) {
-				return base.WithDetails(&quorumkvv1.StaleSequence{ReceivedSequence: 1, LastSequence: 2})
+				return base.WithDetails(&ternionv1.StaleSequence{ReceivedSequence: 1, LastSequence: 2})
 			},
 		},
 		{
 			name: "out of order",
 			sequenceError: func(base *status.Status) (*status.Status, error) {
-				return base.WithDetails(&quorumkvv1.OutOfOrderSequence{ReceivedSequence: 4, NextSequence: 3})
+				return base.WithDetails(&ternionv1.OutOfOrderSequence{ReceivedSequence: 4, NextSequence: 3})
 			},
 		},
 	}
@@ -97,7 +97,7 @@ func TestPermanentContractErrorsAreNeverRetried(t *testing.T) {
 		{
 			name: "validation",
 			err: func(t *testing.T) error {
-				return withDetail(t, codes.InvalidArgument, "invalid Key", &quorumkvv1.ValidationError{Field: "key"})
+				return withDetail(t, codes.InvalidArgument, "invalid Key", &ternionv1.ValidationError{Field: "key"})
 			},
 			invoke: func(ctx context.Context, client *Client) error {
 				return client.Set(ctx, [16]byte{1}, 1, "", nil)
@@ -106,7 +106,7 @@ func TestPermanentContractErrorsAreNeverRetried(t *testing.T) {
 		{
 			name: "missing Key",
 			err: func(t *testing.T) error {
-				return withDetail(t, codes.NotFound, "missing Key", &quorumkvv1.KeyNotFound{Key: "missing"})
+				return withDetail(t, codes.NotFound, "missing Key", &ternionv1.KeyNotFound{Key: "missing"})
 			},
 			invoke: func(ctx context.Context, client *Client) error {
 				_, err := client.Get(ctx, "missing")
@@ -116,7 +116,7 @@ func TestPermanentContractErrorsAreNeverRetried(t *testing.T) {
 		{
 			name: "invalid Client Session",
 			err: func(t *testing.T) error {
-				return withDetail(t, codes.NotFound, "unknown Client Session", &quorumkvv1.InvalidSession{Reason: quorumkvv1.InvalidSessionReason_INVALID_SESSION_REASON_UNKNOWN})
+				return withDetail(t, codes.NotFound, "unknown Client Session", &ternionv1.InvalidSession{Reason: ternionv1.InvalidSessionReason_INVALID_SESSION_REASON_UNKNOWN})
 			},
 			invoke: func(ctx context.Context, client *Client) error {
 				_, err := client.Delete(ctx, [16]byte{1}, 1, "key")
@@ -126,7 +126,7 @@ func TestPermanentContractErrorsAreNeverRetried(t *testing.T) {
 		{
 			name: "stale sequence",
 			err: func(t *testing.T) error {
-				return withDetail(t, codes.FailedPrecondition, "stale", &quorumkvv1.StaleSequence{})
+				return withDetail(t, codes.FailedPrecondition, "stale", &ternionv1.StaleSequence{})
 			},
 			invoke: func(ctx context.Context, client *Client) error {
 				return client.Set(ctx, [16]byte{1}, 1, "key", nil)
@@ -135,7 +135,7 @@ func TestPermanentContractErrorsAreNeverRetried(t *testing.T) {
 		{
 			name: "out-of-order sequence",
 			err: func(t *testing.T) error {
-				return withDetail(t, codes.FailedPrecondition, "out of order", &quorumkvv1.OutOfOrderSequence{})
+				return withDetail(t, codes.FailedPrecondition, "out of order", &ternionv1.OutOfOrderSequence{})
 			},
 			invoke: func(ctx context.Context, client *Client) error {
 				_, err := client.Delete(ctx, [16]byte{1}, 3, "key")
@@ -161,54 +161,54 @@ func TestPermanentContractErrorsAreNeverRetried(t *testing.T) {
 }
 
 type sequenceErrorServer struct {
-	quorumkvv1.UnimplementedClientServiceServer
+	ternionv1.UnimplementedClientServiceServer
 	err      error
 	attempts atomic.Int32
 }
 
 type getServer struct {
-	quorumkvv1.UnimplementedClientServiceServer
+	ternionv1.UnimplementedClientServiceServer
 	value []byte
 }
 
 type contractErrorServer struct {
-	quorumkvv1.UnimplementedClientServiceServer
+	ternionv1.UnimplementedClientServiceServer
 	err      error
 	attempts atomic.Int32
 }
 
-func (s *contractErrorServer) Set(context.Context, *quorumkvv1.SetRequest) (*quorumkvv1.SetResponse, error) {
+func (s *contractErrorServer) Set(context.Context, *ternionv1.SetRequest) (*ternionv1.SetResponse, error) {
 	s.attempts.Add(1)
 	return nil, s.err
 }
 
-func (s *contractErrorServer) Get(context.Context, *quorumkvv1.GetRequest) (*quorumkvv1.GetResponse, error) {
+func (s *contractErrorServer) Get(context.Context, *ternionv1.GetRequest) (*ternionv1.GetResponse, error) {
 	s.attempts.Add(1)
 	return nil, s.err
 }
 
-func (s *contractErrorServer) Delete(context.Context, *quorumkvv1.DeleteRequest) (*quorumkvv1.DeleteResponse, error) {
+func (s *contractErrorServer) Delete(context.Context, *ternionv1.DeleteRequest) (*ternionv1.DeleteResponse, error) {
 	s.attempts.Add(1)
 	return nil, s.err
 }
 
-func (s *getServer) Get(context.Context, *quorumkvv1.GetRequest) (*quorumkvv1.GetResponse, error) {
-	return &quorumkvv1.GetResponse{Value: append([]byte(nil), s.value...)}, nil
+func (s *getServer) Get(context.Context, *ternionv1.GetRequest) (*ternionv1.GetResponse, error) {
+	return &ternionv1.GetResponse{Value: append([]byte(nil), s.value...)}, nil
 }
 
-func (s *sequenceErrorServer) Set(context.Context, *quorumkvv1.SetRequest) (*quorumkvv1.SetResponse, error) {
+func (s *sequenceErrorServer) Set(context.Context, *ternionv1.SetRequest) (*ternionv1.SetResponse, error) {
 	s.attempts.Add(1)
 	return nil, s.err
 }
 
-func serveClient(t *testing.T, service quorumkvv1.ClientServiceServer) (string, func()) {
+func serveClient(t *testing.T, service ternionv1.ClientServiceServer) (string, func()) {
 	t.Helper()
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatalf("listen: %v", err)
 	}
 	server := grpc.NewServer()
-	quorumkvv1.RegisterClientServiceServer(server, service)
+	ternionv1.RegisterClientServiceServer(server, service)
 	done := make(chan struct{})
 	go func() {
 		defer close(done)

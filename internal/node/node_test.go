@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/darshmahadevia/quorumkv/client"
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/config"
-	"github.com/darshmahadevia/quorumkv/internal/node"
+	"github.com/darshmahadevia/ternion/client"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/config"
+	"github.com/darshmahadevia/ternion/internal/node"
 	"go.uber.org/goleak"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -176,9 +176,9 @@ func TestNodeReportsStatusAndHealthThenStops(t *testing.T) {
 	connection := dialEventually(t, clientAddress)
 	defer connection.Close()
 
-	status, err := quorumkvv1.NewNodeServiceClient(connection).GetStatus(
+	status, err := ternionv1.NewNodeServiceClient(connection).GetStatus(
 		context.Background(),
-		&quorumkvv1.GetStatusRequest{},
+		&ternionv1.GetStatusRequest{},
 	)
 	if err != nil {
 		t.Fatalf("GetStatus() error = %v", err)
@@ -186,7 +186,7 @@ func TestNodeReportsStatusAndHealthThenStops(t *testing.T) {
 	if status.ClusterId != cfg.ClusterID || status.NodeId != cfg.Node.ID {
 		t.Fatalf("GetStatus() identity = %q/%q, want %q/%q", status.ClusterId, status.NodeId, cfg.ClusterID, cfg.Node.ID)
 	}
-	if status.State != quorumkvv1.NodeState_NODE_STATE_READY {
+	if status.State != ternionv1.NodeState_NODE_STATE_READY {
 		t.Fatalf("GetStatus() state = %v, want READY", status.State)
 	}
 	if status.PeerAddress != peerAddress || status.ClientAddress != clientAddress {
@@ -315,7 +315,7 @@ func dialEventually(t *testing.T, address string) *grpc.ClientConn {
 			t.Fatalf("create client for %q: %v", address, err)
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
-		_, err = quorumkvv1.NewNodeServiceClient(connection).GetStatus(ctx, &quorumkvv1.GetStatusRequest{})
+		_, err = ternionv1.NewNodeServiceClient(connection).GetStatus(ctx, &ternionv1.GetStatusRequest{})
 		cancel()
 		if err == nil {
 			return connection

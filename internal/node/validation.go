@@ -3,8 +3,8 @@ package node
 import (
 	"unicode/utf8"
 
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/raft"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -34,7 +34,7 @@ func validateKey(key string) error {
 
 func validationError(field, format string, args ...any) error {
 	base := status.Newf(codes.InvalidArgument, format, args...)
-	withDetails, err := base.WithDetails(&quorumkvv1.ValidationError{Field: field})
+	withDetails, err := base.WithDetails(&ternionv1.ValidationError{Field: field})
 	if err != nil {
 		return base.Err()
 	}

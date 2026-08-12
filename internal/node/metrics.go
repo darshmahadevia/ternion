@@ -26,7 +26,7 @@ func (m *nodeMetrics) observeRPC(err error) {
 func (m *nodeMetrics) handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; version=0.0.4")
-		writeMetric := func(name string, value uint64) { _, _ = fmt.Fprintf(w, "quorumkv_%s %d\n", name, value) }
+		writeMetric := func(name string, value uint64) { _, _ = fmt.Fprintf(w, "ternion_%s %d\n", name, value) }
 		writeMetric("rpc_total", m.rpcTotal.Load())
 		writeMetric("rpc_errors_total", m.rpcErrors.Load())
 		writeMetric("elections_total", m.elections.Load())

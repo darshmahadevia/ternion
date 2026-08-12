@@ -1,5 +1,5 @@
 // Package linearizability provides a client-side history recorder and a
-// checker for the QuorumKV data contract.
+// checker for the Ternion data contract.
 package linearizability
 
 import (

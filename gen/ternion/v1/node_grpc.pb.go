@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.1
 // - protoc             (unknown)
-// source: quorumkv/v1/node.proto
+// source: ternion/v1/node.proto
 
-package quorumkvv1
+package ternionv1
 
 import (
 	context "context"
@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	NodeService_GetStatus_FullMethodName = "/quorumkv.v1.NodeService/GetStatus"
+	NodeService_GetStatus_FullMethodName = "/ternion.v1.NodeService/GetStatus"
 )
 
 // NodeServiceClient is the client API for NodeService service.
@@ -108,7 +108,7 @@ func _NodeService_GetStatus_Handler(srv interface{}, ctx context.Context, dec fu
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var NodeService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "quorumkv.v1.NodeService",
+	ServiceName: "ternion.v1.NodeService",
 	HandlerType: (*NodeServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -117,15 +117,15 @@ var NodeService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "quorumkv/v1/node.proto",
+	Metadata: "ternion/v1/node.proto",
 }
 
 const (
-	ClientService_OpenSession_FullMethodName  = "/quorumkv.v1.ClientService/OpenSession"
-	ClientService_CloseSession_FullMethodName = "/quorumkv.v1.ClientService/CloseSession"
-	ClientService_Set_FullMethodName          = "/quorumkv.v1.ClientService/Set"
-	ClientService_Get_FullMethodName          = "/quorumkv.v1.ClientService/Get"
-	ClientService_Delete_FullMethodName       = "/quorumkv.v1.ClientService/Delete"
+	ClientService_OpenSession_FullMethodName  = "/ternion.v1.ClientService/OpenSession"
+	ClientService_CloseSession_FullMethodName = "/ternion.v1.ClientService/CloseSession"
+	ClientService_Set_FullMethodName          = "/ternion.v1.ClientService/Set"
+	ClientService_Get_FullMethodName          = "/ternion.v1.ClientService/Get"
+	ClientService_Delete_FullMethodName       = "/ternion.v1.ClientService/Delete"
 )
 
 // ClientServiceClient is the client API for ClientService service.
@@ -346,7 +346,7 @@ func _ClientService_Delete_Handler(srv interface{}, ctx context.Context, dec fun
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ClientService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "quorumkv.v1.ClientService",
+	ServiceName: "ternion.v1.ClientService",
 	HandlerType: (*ClientServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -371,12 +371,12 @@ var ClientService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "quorumkv/v1/node.proto",
+	Metadata: "ternion/v1/node.proto",
 }
 
 const (
-	PeerService_Handshake_FullMethodName = "/quorumkv.v1.PeerService/Handshake"
-	PeerService_Send_FullMethodName      = "/quorumkv.v1.PeerService/Send"
+	PeerService_Handshake_FullMethodName = "/ternion.v1.PeerService/Handshake"
+	PeerService_Send_FullMethodName      = "/ternion.v1.PeerService/Send"
 )
 
 // PeerServiceClient is the client API for PeerService service.
@@ -498,7 +498,7 @@ func _PeerService_Send_Handler(srv interface{}, ctx context.Context, dec func(in
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var PeerService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "quorumkv.v1.PeerService",
+	ServiceName: "ternion.v1.PeerService",
 	HandlerType: (*PeerServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -511,5 +511,5 @@ var PeerService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "quorumkv/v1/node.proto",
+	Metadata: "ternion/v1/node.proto",
 }

@@ -1,4 +1,4 @@
-module github.com/darshmahadevia/quorumkv
+module github.com/darshmahadevia/ternion
 
 go 1.25.0
 

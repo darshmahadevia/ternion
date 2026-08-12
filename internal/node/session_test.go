@@ -6,9 +6,9 @@ import (
 	"strings"
 	"testing"
 
-	quorumkvv1 "github.com/darshmahadevia/quorumkv/gen/quorumkv/v1"
-	"github.com/darshmahadevia/quorumkv/internal/config"
-	"github.com/darshmahadevia/quorumkv/internal/raft"
+	ternionv1 "github.com/darshmahadevia/ternion/gen/ternion/v1"
+	"github.com/darshmahadevia/ternion/internal/config"
+	"github.com/darshmahadevia/ternion/internal/raft"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -54,12 +54,12 @@ func TestFollowerReturnsTypedLeaderHint(t *testing.T) {
 	})
 	n.publishRaftState(raft.State{ID: "node-1", Role: raft.Follower, LeaderID: "node-2", Term: 3})
 
-	_, err := n.OpenSession(context.Background(), &quorumkvv1.OpenSessionRequest{})
+	_, err := n.OpenSession(context.Background(), &ternionv1.OpenSessionRequest{})
 	if status.Code(err) != codes.FailedPrecondition {
 		t.Fatalf("OpenSession() error = %v, want FailedPrecondition", err)
 	}
 	for _, detail := range status.Convert(err).Details() {
-		notLeader, ok := detail.(*quorumkvv1.NotLeader)
+		notLeader, ok := detail.(*ternionv1.NotLeader)
 		if ok {
 			if notLeader.LeaderId != "node-2" || notLeader.LeaderAddress != "127.0.0.1:7402" {
 				t.Fatalf("NotLeader detail = %#v, want node-2 address", notLeader)
@@ -82,7 +82,7 @@ func TestGetFollowerReturnsTypedLeaderHint(t *testing.T) {
 	})
 	n.publishRaftState(raft.State{ID: "node-1", Role: raft.Follower, LeaderID: "node-2", Term: 3})
 
-	_, err := n.Get(context.Background(), &quorumkvv1.GetRequest{Key: "key"})
+	_, err := n.Get(context.Background(), &ternionv1.GetRequest{Key: "key"})
 	if status.Code(err) != codes.FailedPrecondition {
 		t.Fatalf("Get() error = %v, want FailedPrecondition", err)
 	}
@@ -90,7 +90,7 @@ func TestGetFollowerReturnsTypedLeaderHint(t *testing.T) {
 	if len(details) != 1 {
 		t.Fatalf("Get() details = %#v, want typed NotLeader", details)
 	}
-	notLeader, ok := details[0].(*quorumkvv1.NotLeader)
+	notLeader, ok := details[0].(*ternionv1.NotLeader)
 	if !ok || notLeader.LeaderId != "node-2" || notLeader.LeaderAddress != "127.0.0.1:7402" {
 		t.Fatalf("Get() NotLeader detail = %#v, want node-2 address", details[0])
 	}
@@ -172,12 +172,12 @@ func TestSequenceFailuresHaveDistinctTypedDetails(t *testing.T) {
 		{
 			name:   "stale",
 			result: proposalResult{failure: sessionStaleSequence, sequence: 1, wantSequence: 2},
-			detail: &quorumkvv1.StaleSequence{},
+			detail: &ternionv1.StaleSequence{},
 		},
 		{
 			name:   "out of order",
 			result: proposalResult{failure: sessionOutOfOrderSequence, sequence: 4, wantSequence: 3},
-			detail: &quorumkvv1.OutOfOrderSequence{},
+			detail: &ternionv1.OutOfOrderSequence{},
 		},
 	}
 	for _, test := range tests {
@@ -196,20 +196,20 @@ func TestSequenceFailuresHaveDistinctTypedDetails(t *testing.T) {
 
 func TestSetRejectsInvalidInputBeforeProposal(t *testing.T) {
 	n := New(config.Config{ClusterID: "cluster-1", Node: config.Node{ID: "node-1"}})
-	valid := func() *quorumkvv1.SetRequest {
-		return &quorumkvv1.SetRequest{SessionId: make([]byte, 16), Sequence: 1, Key: "key"}
+	valid := func() *ternionv1.SetRequest {
+		return &ternionv1.SetRequest{SessionId: make([]byte, 16), Sequence: 1, Key: "key"}
 	}
 	tests := []struct {
 		name   string
 		field  string
-		change func(*quorumkvv1.SetRequest)
+		change func(*ternionv1.SetRequest)
 	}{
-		{name: "session identity", field: "session_id", change: func(request *quorumkvv1.SetRequest) { request.SessionId = nil }},
-		{name: "zero sequence", field: "sequence", change: func(request *quorumkvv1.SetRequest) { request.Sequence = 0 }},
-		{name: "empty Key", field: "key", change: func(request *quorumkvv1.SetRequest) { request.Key = "" }},
-		{name: "invalid UTF-8 Key", field: "key", change: func(request *quorumkvv1.SetRequest) { request.Key = string([]byte{0xff}) }},
-		{name: "oversized Key", field: "key", change: func(request *quorumkvv1.SetRequest) { request.Key = strings.Repeat("k", maxKeyBytes+1) }},
-		{name: "oversized Value", field: "value", change: func(request *quorumkvv1.SetRequest) { request.Value = make([]byte, maxValueBytes+1) }},
+		{name: "session identity", field: "session_id", change: func(request *ternionv1.SetRequest) { request.SessionId = nil }},
+		{name: "zero sequence", field: "sequence", change: func(request *ternionv1.SetRequest) { request.Sequence = 0 }},
+		{name: "empty Key", field: "key", change: func(request *ternionv1.SetRequest) { request.Key = "" }},
+		{name: "invalid UTF-8 Key", field: "key", change: func(request *ternionv1.SetRequest) { request.Key = string([]byte{0xff}) }},
+		{name: "oversized Key", field: "key", change: func(request *ternionv1.SetRequest) { request.Key = strings.Repeat("k", maxKeyBytes+1) }},
+		{name: "oversized Value", field: "value", change: func(request *ternionv1.SetRequest) { request.Value = make([]byte, maxValueBytes+1) }},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -223,7 +223,7 @@ func TestSetRejectsInvalidInputBeforeProposal(t *testing.T) {
 			if len(details) != 1 {
 				t.Fatalf("Set() error details = %#v, want one ValidationError for %q", details, test.field)
 			}
-			validation, ok := details[0].(*quorumkvv1.ValidationError)
+			validation, ok := details[0].(*ternionv1.ValidationError)
 			if !ok || validation.Field != test.field {
 				t.Fatalf("Set() error details = %#v, want ValidationError for %q", details, test.field)
 			}
@@ -233,7 +233,7 @@ func TestSetRejectsInvalidInputBeforeProposal(t *testing.T) {
 
 func TestDeleteRejectsInvalidInputBeforeProposal(t *testing.T) {
 	n := New(config.Config{ClusterID: "cluster-1", Node: config.Node{ID: "node-1"}})
-	requests := []*quorumkvv1.DeleteRequest{
+	requests := []*ternionv1.DeleteRequest{
 		{Sequence: 1, Key: "key"},
 		{SessionId: make([]byte, 16), Key: "key"},
 		{SessionId: make([]byte, 16), Sequence: 1},
@@ -250,7 +250,7 @@ func TestDeleteRejectsInvalidInputBeforeProposal(t *testing.T) {
 func TestGetRejectsInvalidKeyBeforeReadConfirmation(t *testing.T) {
 	n := New(config.Config{ClusterID: "cluster-1", Node: config.Node{ID: "node-1"}})
 	for _, key := range []string{"", string([]byte{0xff}), strings.Repeat("k", maxKeyBytes+1)} {
-		_, err := n.Get(context.Background(), &quorumkvv1.GetRequest{Key: key})
+		_, err := n.Get(context.Background(), &ternionv1.GetRequest{Key: key})
 		if status.Code(err) != codes.InvalidArgument {
 			t.Fatalf("Get(%q) error = %v, want InvalidArgument", key, err)
 		}
