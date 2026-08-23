@@ -17,9 +17,9 @@ import (
 // installation. The apply loop clones state; file I/O proceeds asynchronously.
 func (n *Node) CreateSnapshot(ctx context.Context) error {
 	result := make(chan error, 1)
-	input := raftInput{snapshotResult: result}
+	input := snapshotInput{result: result}
 	select {
-	case n.events <- input:
+	case n.inputs <- input:
 	case <-n.runtimeDone:
 		return errors.New("create Snapshot: Node is stopping")
 	case <-ctx.Done():

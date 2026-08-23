@@ -48,9 +48,9 @@ func (n *Node) Send(ctx context.Context, request *ternionv1.SendRequest) (*terni
 	// A successful peer RPC means the bounded owner queue accepted the message.
 	// Waiting for the owner to dequeue it can deadlock Nodes that synchronously
 	// exchange reciprocal Raft messages; network loss at shutdown is permitted.
-	input := raftInput{event: event}
+	input := raftEventInput{event: event}
 	select {
-	case n.events <- input:
+	case n.inputs <- input:
 		return &ternionv1.SendResponse{}, nil
 	case <-n.runtimeDone:
 		return nil, status.Error(codes.Unavailable, "target Node is stopping")

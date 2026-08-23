@@ -27,9 +27,9 @@ func (n *Node) Get(ctx context.Context, request *ternionv1.GetRequest) (*ternion
 
 	results := make(chan readResult, 1)
 	readID := raft.ReadID(n.nextRead.Add(1))
-	input := raftInput{event: raft.ConfirmRead{ReadID: readID}, readResult: results, requestContext: ctx, key: request.Key}
+	input := readInput{event: raft.ConfirmRead{ReadID: readID}, result: results, ctx: ctx, key: request.Key}
 	select {
-	case n.events <- input:
+	case n.inputs <- input:
 	case <-n.runtimeDone:
 		return nil, status.Error(codes.Unavailable, "Node is stopping")
 	case <-ctx.Done():

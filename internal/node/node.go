@@ -39,7 +39,7 @@ type Node struct {
 	config          config.Config
 	ready           atomic.Bool
 	raftState       atomic.Value
-	events          chan raftInput
+	inputs          chan runtimeInput
 	runtimeDone     chan struct{}
 	nextProposal    atomic.Uint64
 	nextRead        atomic.Uint64
@@ -49,20 +49,11 @@ type Node struct {
 	lastRole        atomic.Uint32
 }
 
-type raftInput struct {
-	event          raft.Event
-	result         chan proposalResult
-	requestContext context.Context
-	readResult     chan readResult
-	key            string
-	snapshotResult chan error
-}
-
 // New creates a node from an already validated configuration.
 func New(cfg config.Config) *Node {
 	n := &Node{
 		config:      cfg,
-		events:      make(chan raftInput, 256),
+		inputs:      make(chan runtimeInput, 256),
 		runtimeDone: make(chan struct{}),
 	}
 	n.logger = slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{Level: slog.LevelInfo}))

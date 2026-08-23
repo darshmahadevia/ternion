@@ -32,20 +32,16 @@ func (n *Node) runRaft(ctx context.Context, runtime *raftRuntime, transport *pee
 	}()
 
 	n.publishRaftState(runtime.core.State())
-	sessions := newSessionMachine(n.config.ActiveSessionLimit)
-	if err := sessions.restore(runtime.recoveredSnapshot); err != nil {
+	commands := newCommandCoordinator(n.config.ActiveSessionLimit, &n.metrics, n.observeMutation)
+	if err := commands.restore(runtime.recoveredSnapshot); err != nil {
 		return fmt.Errorf("restore replicated Snapshot state: %w", err)
 	}
 	recovery, err := runtime.step(raft.RecoverCommitted{})
 	if err != nil {
 		return err
 	}
-	for _, action := range recovery {
-		apply, ok := action.(raft.ApplyEntry)
-		if !ok {
-			return fmt.Errorf("recover committed state: unexpected Raft action %T", action)
-		}
-		sessions.apply(apply.Entry)
+	if err := commands.recover(recovery); err != nil {
+		return err
 	}
 	n.publishRaftState(runtime.core.State())
 
@@ -71,7 +67,7 @@ func (n *Node) runRaft(ctx context.Context, runtime *raftRuntime, transport *pee
 		}
 		n.metrics.snapshots.Add(1)
 		state := runtime.core.State()
-		captured := sessions.snapshot(snapshotIdentity(n.config), state.LastApplied, state.LastAppliedTerm)
+		captured := commands.snapshot(snapshotIdentity(n.config), state.LastApplied, state.LastAppliedTerm)
 		snapshotRunning = true
 		snapshotAutomatic = automatic
 		go func() {
@@ -98,52 +94,16 @@ func (n *Node) runRaft(ctx context.Context, runtime *raftRuntime, transport *pee
 		}
 	}()
 
-	type pendingProposal struct {
-		result chan proposalResult
-		ctx    context.Context
-	}
-	type inFlightMutation struct {
-		sequence uint64
-		index    uint64
-	}
-	type pendingRead struct {
-		result chan readResult
-		ctx    context.Context
-		key    string
-	}
 	type incomingSnapshot struct {
 		index, term, length uint64
 		checksum            uint32
 		data                []byte
 	}
 	var incoming *incomingSnapshot
-	pending := make(map[uint64][]pendingProposal)
-	inFlightMutations := make(map[raft.SessionID]inFlightMutation)
-	pendingReads := make(map[raft.ReadID]pendingRead)
 	for {
-		for index, proposals := range pending {
-			active := proposals[:0]
-			for _, proposal := range proposals {
-				if proposal.ctx.Err() == nil {
-					active = append(active, proposal)
-				}
-			}
-			if len(active) == 0 {
-				delete(pending, index)
-			} else {
-				pending[index] = active
-			}
-		}
-		for readID, read := range pendingReads {
-			if read.ctx.Err() != nil {
-				delete(pendingReads, readID)
-			}
-		}
+		commands.pruneCanceled()
 		var event raft.Event
-		var proposalResults chan proposalResult
-		var proposalContext context.Context
-		var readResults chan readResult
-		var readKey string
+		var current runtimeInput
 		select {
 		case <-ctx.Done():
 			if snapshotRunning {
@@ -164,16 +124,25 @@ func (n *Node) runRaft(ctx context.Context, runtime *raftRuntime, transport *pee
 				n.publishRaftState(runtime.core.State())
 			}
 			continue
-		case input := <-n.events:
-			if input.snapshotResult != nil {
-				startSnapshot(input.snapshotResult, false)
+		case input := <-n.inputs:
+			current = input
+			switch input := input.(type) {
+			case raftEventInput:
+				event = input.event
+			case proposalInput:
+				var shouldStep bool
+				event, shouldStep = commands.beginProposal(input)
+				if !shouldStep {
+					continue
+				}
+			case readInput:
+				event = commands.beginRead(input)
+			case snapshotInput:
+				startSnapshot(input.result, false)
 				continue
+			default:
+				return fmt.Errorf("run Raft: unsupported runtime input %T", input)
 			}
-			event = input.event
-			proposalResults = input.result
-			proposalContext = input.requestContext
-			readResults = input.readResult
-			readKey = input.key
 		case <-electionTimer.C:
 			event = raft.ElectionTimeout{}
 		case <-heartbeatC:
@@ -204,7 +173,7 @@ func (n *Node) runRaft(ctx context.Context, runtime *raftRuntime, transport *pee
 						if err := runtime.wal.InstallSnapshot(state.IncludedIndex, state.IncludedTerm); err != nil {
 							return fmt.Errorf("persist received Snapshot: %w", err)
 						}
-						if err := sessions.restore(state); err != nil {
+						if err := commands.restore(state); err != nil {
 							return fmt.Errorf("restore received Snapshot: %w", err)
 						}
 						n.metrics.snapshotInstalls.Add(1)
@@ -218,32 +187,15 @@ func (n *Node) runRaft(ctx context.Context, runtime *raftRuntime, transport *pee
 			}
 			event = request
 		}
-		if read, ok := event.(raft.ConfirmRead); ok && readResults != nil {
-			pendingReads[read.ReadID] = pendingRead{result: readResults, ctx: proposalContext, key: readKey}
-		}
-
-		mutationSession, mutationSequence, isMutation := proposedMutation(event)
-		if isMutation {
-			if mutation, exists := inFlightMutations[mutationSession]; exists && mutation.sequence == mutationSequence {
-				pending[mutation.index] = append(pending[mutation.index], pendingProposal{result: proposalResults, ctx: proposalContext})
-				continue
-			}
-			if result, shouldPropose := sessions.evaluateMutation(mutationSession, mutationSequence); !shouldPropose {
-				proposalResults <- result
-				continue
-			}
-			if n.observeMutation != nil {
-				entry, _ := entryForMutation(event)
-				n.observeMutation(mutationBeforeAppend, entry)
-			}
-		}
-
 		wasLeader := runtime.core.State().Role == raft.Leader
 		actions, err := runtime.step(event)
 		if err != nil {
 			return err
 		}
 		for _, action := range actions {
+			if commands.handle(action, current) {
+				continue
+			}
 			switch action := action.(type) {
 			case raft.SendPreVoteRequest, raft.SendPreVoteResponse, raft.SendVoteRequest,
 				raft.SendVoteResponse, raft.SendAppendEntries, raft.SendAppendEntriesResponse,
@@ -279,67 +231,16 @@ func (n *Node) runRaft(ctx context.Context, runtime *raftRuntime, transport *pee
 				heartbeatTimer, heartbeatC = resetOptionalTimer(heartbeatTimer, heartbeatInterval)
 			case raft.ResetCheckQuorumTimer:
 				quorumTimer, quorumC = resetOptionalTimer(quorumTimer, checkQuorumWindow)
-			case raft.ProposalAccepted:
-				n.metrics.proposals.Add(1)
-				if proposalResults != nil && proposalContext != nil {
-					pending[action.Index] = append(pending[action.Index], pendingProposal{result: proposalResults, ctx: proposalContext})
-				}
-				if isMutation {
-					inFlightMutations[mutationSession] = inFlightMutation{sequence: mutationSequence, index: action.Index}
-				}
-			case raft.ProposalRejected:
-				if proposalResults != nil {
-					proposalResults <- proposalResult{leaderID: action.LeaderID, rejected: true}
-				}
-			case raft.ApplyEntry:
-				result := sessions.apply(action.Entry)
-				if n.observeMutation != nil && (action.Entry.Type == raft.EntrySet || action.Entry.Type == raft.EntryDelete) {
-					n.observeMutation(mutationAfterApplication, action.Entry)
-				}
-				if (action.Entry.Type == raft.EntrySet || action.Entry.Type == raft.EntryDelete) && inFlightMutations[action.Entry.SessionID].sequence == action.Entry.Sequence {
-					delete(inFlightMutations, action.Entry.SessionID)
-				}
-				if proposals, ok := pending[action.Entry.Index]; ok {
-					for _, proposal := range proposals {
-						proposal.result <- result
-					}
-					delete(pending, action.Entry.Index)
-				}
 			case raft.BecameLeader:
 				n.metrics.elections.Add(1)
 			case raft.BecameReadReady, raft.LostLeadership:
 				// Role and progress are read from the core after all actions finish.
-			case raft.ReadConfirmed:
-				read, ok := pendingReads[action.ReadID]
-				if !ok {
-					continue
-				}
-				value, found := sessions.get(read.key)
-				read.result <- readResult{value: value, found: found}
-				delete(pendingReads, action.ReadID)
-			case raft.ReadRejected:
-				read, ok := pendingReads[action.ReadID]
-				if !ok {
-					continue
-				}
-				read.result <- readResult{leaderID: action.LeaderID, rejected: true}
-				delete(pendingReads, action.ReadID)
 			}
 		}
 
 		state := runtime.core.State()
 		if wasLeader && state.Role != raft.Leader {
-			for index, proposals := range pending {
-				for _, proposal := range proposals {
-					proposal.result <- proposalResult{leaderID: state.LeaderID, rejected: true}
-				}
-				delete(pending, index)
-			}
-			clear(inFlightMutations)
-			for readID, read := range pendingReads {
-				read.result <- readResult{leaderID: state.LeaderID, rejected: true}
-				delete(pendingReads, readID)
-			}
+			commands.lostLeadership(state.LeaderID)
 		}
 		if state.Role != raft.Leader {
 			stopTimer(heartbeatTimer)
@@ -351,17 +252,6 @@ func (n *Node) runRaft(ctx context.Context, runtime *raftRuntime, transport *pee
 		if !snapshotRunning && state.LastApplied > lastSnapshotIndex && runtime.wal.RetainedLogBytes(state.LastApplied) >= threshold {
 			startSnapshot(nil, true)
 		}
-	}
-}
-
-func proposedMutation(event raft.Event) (raft.SessionID, uint64, bool) {
-	switch event := event.(type) {
-	case raft.ProposeSet:
-		return event.SessionID, event.Sequence, true
-	case raft.ProposeDelete:
-		return event.SessionID, event.Sequence, true
-	default:
-		return raft.SessionID{}, 0, false
 	}
 }
 

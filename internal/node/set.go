@@ -46,9 +46,9 @@ func (n *Node) Set(ctx context.Context, request *ternionv1.SetRequest) (*ternion
 
 func (n *Node) propose(ctx context.Context, event raft.Event) (proposalResult, error) {
 	results := make(chan proposalResult, 1)
-	input := raftInput{event: event, result: results, requestContext: ctx}
+	input := proposalInput{event: event, result: results, ctx: ctx}
 	select {
-	case n.events <- input:
+	case n.inputs <- input:
 	case <-n.runtimeDone:
 		return proposalResult{}, status.Error(codes.Unavailable, "Node is stopping")
 	case <-ctx.Done():

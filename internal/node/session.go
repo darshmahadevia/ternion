@@ -40,8 +40,8 @@ const (
 	sessionPermanentlyClosed
 )
 
-// sessionMachine is owned exclusively by the Raft runtime loop. Applying the
-// same committed entries therefore produces the same state on every Node.
+// sessionMachine is private implementation inside commandCoordinator. Applying
+// the same committed entries therefore produces the same state on every Node.
 type sessionMachine struct {
 	limit    int
 	active   int

@@ -107,9 +107,13 @@ func TestPeerSendReturnsAfterQueueingWithoutWaitingForRuntime(t *testing.T) {
 		t.Fatalf("Send() before runtime dequeue: %v", err)
 	}
 	select {
-	case input := <-n.events:
-		if _, ok := input.event.(raft.PreVoteRequest); !ok {
-			t.Fatalf("queued event = %T, want PreVoteRequest", input.event)
+	case input := <-n.inputs:
+		peer, ok := input.(raftEventInput)
+		if !ok {
+			t.Fatalf("queued input = %T, want raftEventInput", input)
+		}
+		if _, ok := peer.event.(raft.PreVoteRequest); !ok {
+			t.Fatalf("queued event = %T, want PreVoteRequest", peer.event)
 		}
 	default:
 		t.Fatal("Send() returned without queueing the peer event")
