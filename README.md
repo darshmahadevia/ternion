@@ -1,33 +1,53 @@
 # Ternion
 
-Ternion is a three-Node distributed key-value database in Go. Each Node is an
-independent process with its own identity, network endpoints, WAL, Snapshot
-files, and persistent volume. Ternion implements its own deterministic Raft
-state machine and exposes typed gRPC APIs plus `ternionctl`.
+Ternion is a strongly consistent key-value database for a fixed three-Node Cluster, written in Go. It implements its own deterministic Raft state machine and persists each Node's state in a segmented write-ahead log and Snapshots.
 
-## 60-second demo
+This is a systems project, not a production database. It has no authentication or TLS and should run only on a trusted development network.
 
-Requirements: Docker and Docker Compose.
+[![CI](https://github.com/darshmahadevia/ternion/actions/workflows/ci.yml/badge.svg)](https://github.com/darshmahadevia/ternion/actions/workflows/ci.yml)
 
-```sh
-demo/run.sh
+```text
+ternionctl ──gRPC──> any Node ──Raft peer gRPC──> the other two Nodes
+                         │                              │
+                         └── segmented WAL              └── independent volume
+                             + in-memory state
 ```
 
-The walkthrough starts three independently persisted Nodes, performs
-`SET`/`GET`/`DELETE`, kills the Leader, confirms majority progress, restarts the
-old Leader, demonstrates minority unavailability, and demonstrates automatic
-Snapshot/compaction followed by stale-Follower Snapshot recovery. It cleans up
-its volumes when it exits. The demo uses a tiny Snapshot threshold so the
-recovery path is visible quickly; normal configurations default to 64 MiB.
+## What it does
 
-For a manual local Cluster, copy `ternion.example.yaml` three times, keep the
-Cluster Identity and member map identical, and change `node.id` and
-`node.data_dir` in each copy. Start each with:
+- Exposes `GET`, `SET`, and `DELETE` through typed gRPC APIs and `ternionctl`.
+- Acknowledges a Mutation only after a Quorum of Nodes has persisted it and the Leader has committed and applied it.
+- The Leader confirms its authority with a fresh Quorum before returning a successful read. Followers return a typed Leader hint instead of serving stale data.
+- Deduplicates retried Mutations with Client Sessions and sequence numbers.
+- Recovers from restarts through checksummed WAL segments and atomically installed Snapshots.
+- Repairs stale Followers with conflict hints or Snapshot transfer after log compaction.
+- Reports Prometheus metrics, JSON logs, and separate liveness and readiness states.
+
+## Watch a cluster fail and recover
+
+You need Docker with Docker Compose.
+
+```sh
+sh demo/run.sh
+```
+
+The script builds Ternion, starts three Nodes with separate persistent volumes, and runs a guided failure scenario. It writes and reads data, kills the Leader, shows that the remaining two Nodes can continue, restarts the old Leader, isolates a minority, and forces Snapshot recovery for a stale Follower. The script removes its containers and volumes when it exits.
+
+The demo lowers the Snapshot threshold so compaction happens quickly. Normal configurations default to 64 MiB.
+
+## Run a cluster manually
+
+You need Go 1.25 or newer. Copy [`ternion.example.yaml`](ternion.example.yaml) once per Node. Keep the Cluster Identity and member map the same in all three files, then give each Node a unique `node.id` and `node.data_dir`. Start each Node in a separate terminal.
 
 ```sh
 go run ./cmd/ternion -config node-1.yaml
 go run ./cmd/ternion -config node-2.yaml
 go run ./cmd/ternion -config node-3.yaml
+```
+
+Use a fourth terminal to inspect the cluster and change data:
+
+```sh
 go run ./cmd/ternionctl -address 127.0.0.1:7401 status
 go run ./cmd/ternionctl -address 127.0.0.1:7401 session open
 go run ./cmd/ternionctl -address 127.0.0.1:7401 set <session-id> 1 greeting hello
@@ -35,34 +55,36 @@ go run ./cmd/ternionctl -address 127.0.0.1:7401 get greeting
 go run ./cmd/ternionctl -address 127.0.0.1:7401 delete <session-id> 2 greeting
 ```
 
-A Follower returns a typed Leader hint and the client follows it directly.
-Successful reads perform a fresh Quorum confirmation. `GetStatus` is a local
-observation, not a Cluster-health claim. Liveness and readiness are separate
-health services; metrics and JSON logs provide operational evidence.
+The client follows Leader hints directly. `status` reports one Node's local view, not the health of the whole Cluster.
 
-## Architecture, guarantees, and non-goals
+## Consistency and failure behavior
 
-See [docs/architecture.md](docs/architecture.md) for the architecture diagram,
-consistency and crash guarantees, Quorum trade-offs, split-brain wording,
-linearizable versus eventual consistency, and the explicit v1 non-goals.
+A completed Mutation is visible to a later successful read. A minority partition cannot accept Mutations or serve successful reads. A timeout leaves the outcome unknown, so callers should retry with the same Client Session and sequence number rather than issue a new Mutation.
 
-## Correctness evidence
+Two Nodes may briefly believe they are the Leader in different Terms. Raft's election rules and intersecting Quorums prevent those beliefs from producing conflicting committed histories.
 
-The repository currently verifies deterministic Raft transitions, WAL and
-Snapshot recovery, linearizability, seeded fault schedules, and real
-multi-process election, failover, partition, restart, repair, and Snapshot
-scenarios. CI runs formatting, the full Go suite, race detection, vet, static
-analysis, Protobuf validation, and Linux/Windows portable coverage. The public
-project makes no production-readiness claim. A reproducible durable benchmark
-and its raw measured result are in [benchmark/README.md](benchmark/README.md);
-published numbers are local development measurements with hardware and workload
-metadata, not production claims.
+The full contract, failure cases, and architecture diagram are in [`docs/architecture.md`](docs/architecture.md).
 
-## Replay a deterministic fault schedule
+## Verification
+
+Run the test suite and static checks:
+
+```sh
+go test ./...
+go test -race ./...
+go vet ./...
+```
+
+The repository tests deterministic state transitions, WAL and Snapshot recovery, linearizability, seeded fault schedules, and real multi-process elections, partitions, restarts, and repairs. CI also runs formatting, Staticcheck, Protobuf lint and regeneration checks, and portable package tests on Linux and Windows.
+
+A failed simulation prints the command needed to replay the same schedule:
 
 ```sh
 go run ./cmd/ternionsim -seed 42 -steps 1000 -trace .traces/seed-42.json
 ```
 
-A failed schedule prints its exact replay command and CI retains traces as
-artifacts.
+One published local run on an AMD Ryzen 7 8845HS measured 715.1 durable SETs per second and 1,028.1 linearizable GETs per second, with p99 latencies of 15.50 ms and 11.52 ms. These are development-machine results, not production claims. The raw result, workload, and benchmark runner are in [`benchmark/README.md`](benchmark/README.md).
+
+## Deliberate limits
+
+Ternion supports exactly three Nodes. It does not implement dynamic membership, transactions, watches, TTLs, authentication, authorization, TLS, WAN tuning, or Byzantine fault tolerance.
