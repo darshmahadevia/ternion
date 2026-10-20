@@ -1,6 +1,24 @@
 # Ternion
 
-Ternion is a strongly consistent key-value database for a fixed three-Node Cluster, written in Go. It implements its own deterministic Raft state machine and persists each Node's state in a segmented write-ahead log and Snapshots.
+Ternion is a Go key-value store that uses Raft to keep a three-node cluster consistent through leader failures.
+
+![Ternion CLI writing and reading a key before and after stopping the elected leader](docs/images/failover.png)
+
+CLI output from a local three-node run. [Read the transcript](docs/images/failover.txt). Values in the JSON output use Base64.
+
+## Watch a cluster fail and recover
+
+You need Docker with Docker Compose.
+
+```sh
+git clone https://github.com/darshmahadevia/ternion.git
+cd ternion
+sh demo/run.sh
+```
+
+The script builds Ternion, starts three Nodes with separate persistent volumes, and runs a guided failure scenario. It writes and reads data, kills the Leader, shows that the remaining two Nodes can continue, restarts the old Leader, isolates a minority, and forces Snapshot recovery for a stale Follower. The script removes its containers and volumes when it exits.
+
+The demo lowers the Snapshot threshold so compaction happens quickly. Normal configurations default to 64 MiB.
 
 This is a systems project, not a production database. It has no authentication or TLS and should run only on a trusted development network.
 
@@ -22,18 +40,6 @@ ternionctl ──gRPC──> any Node ──Raft peer gRPC──> the other two 
 - Recovers from restarts through checksummed WAL segments and atomically installed Snapshots.
 - Repairs stale Followers with conflict hints or Snapshot transfer after log compaction.
 - Reports Prometheus metrics, JSON logs, and separate liveness and readiness states.
-
-## Watch a cluster fail and recover
-
-You need Docker with Docker Compose.
-
-```sh
-sh demo/run.sh
-```
-
-The script builds Ternion, starts three Nodes with separate persistent volumes, and runs a guided failure scenario. It writes and reads data, kills the Leader, shows that the remaining two Nodes can continue, restarts the old Leader, isolates a minority, and forces Snapshot recovery for a stale Follower. The script removes its containers and volumes when it exits.
-
-The demo lowers the Snapshot threshold so compaction happens quickly. Normal configurations default to 64 MiB.
 
 ## Run a cluster manually
 

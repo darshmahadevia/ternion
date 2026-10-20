@@ -1,0 +1,14 @@
+$ ternionctl -address 127.0.0.1:17401 set "$SESSION" 1 greeting hello
+{"key":"greeting","sequence":1,"stored":true}
+
+$ ternionctl -address 127.0.0.1:17402 get greeting
+{"key":"greeting","value":"aGVsbG8=","found":true}
+
+$ kill "$NODE_2_PID"
+# Stopped node-2, the elected leader.
+
+$ ternionctl -address 127.0.0.1:17401 set "$SESSION" 2 greeting still-here
+{"key":"greeting","sequence":2,"stored":true}
+
+$ ternionctl -address 127.0.0.1:17401 get greeting
+{"key":"greeting","value":"c3RpbGwtaGVyZQ==","found":true}
