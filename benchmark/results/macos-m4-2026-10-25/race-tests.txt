@@ -1,0 +1,14 @@
+ok  	github.com/darshmahadevia/ternion/client	1.263s
+?   	github.com/darshmahadevia/ternion/cmd/ternion	[no test files]
+ok  	github.com/darshmahadevia/ternion/cmd/ternionbench	1.230s
+?   	github.com/darshmahadevia/ternion/cmd/ternionctl	[no test files]
+?   	github.com/darshmahadevia/ternion/cmd/ternionsim	[no test files]
+?   	github.com/darshmahadevia/ternion/gen/ternion/v1	[no test files]
+?   	github.com/darshmahadevia/ternion/internal/cli	[no test files]
+ok  	github.com/darshmahadevia/ternion/internal/config	1.168s
+ok  	github.com/darshmahadevia/ternion/internal/linearizability	1.166s
+ok  	github.com/darshmahadevia/ternion/internal/node	45.106s
+ok  	github.com/darshmahadevia/ternion/internal/raft	1.155s
+ok  	github.com/darshmahadevia/ternion/internal/simulation	1.508s
+ok  	github.com/darshmahadevia/ternion/internal/snapshot	1.204s
+ok  	github.com/darshmahadevia/ternion/internal/wal	1.521s

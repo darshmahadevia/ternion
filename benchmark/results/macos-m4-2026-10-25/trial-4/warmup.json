@@ -1,0 +1,85 @@
+{
+  "format_version": 1,
+  "generated_at": "2026-10-25T17:25:32.796214Z",
+  "environment": {
+    "hardware": "Apple M4, 10 cores, 16 GiB RAM, local APFS temporary directories",
+    "os": "darwin",
+    "arch": "arm64",
+    "go_version": "go1.26.5"
+  },
+  "cluster": {
+    "nodes": 3,
+    "topology": "three local OS processes with separate data directories",
+    "durable_wal_sync": true
+  },
+  "parameters": {
+    "set_operations": 20,
+    "get_operations": 20,
+    "concurrency": 8,
+    "value_bytes": 1024
+  },
+  "workloads": [
+    {
+      "command": "SET",
+      "operations": 20,
+      "duration_nanoseconds": 88161000,
+      "throughput_ops_per_second": 226.85768083392884,
+      "p50_nanoseconds": 29191250,
+      "p95_nanoseconds": 40853375,
+      "p99_nanoseconds": 41050625,
+      "latency_samples_nanoseconds": [
+        41050625,
+        40024834,
+        40040458,
+        39928250,
+        40564125,
+        40853375,
+        39793250,
+        39801125,
+        29191250,
+        29172291,
+        29479042,
+        29471417,
+        28970708,
+        28439333,
+        27969708,
+        27965375,
+        19064792,
+        19065709,
+        19035791,
+        19034125
+      ]
+    },
+    {
+      "command": "GET",
+      "operations": 20,
+      "duration_nanoseconds": 14358750,
+      "throughput_ops_per_second": 1392.8789065900583,
+      "p50_nanoseconds": 4997042,
+      "p95_nanoseconds": 7461375,
+      "p99_nanoseconds": 8242000,
+      "latency_samples_nanoseconds": [
+        7461375,
+        4950167,
+        4181667,
+        4315041,
+        8242000,
+        6053750,
+        5350959,
+        6593084,
+        4997042,
+        5795125,
+        5726000,
+        5670209,
+        5439625,
+        5216333,
+        4815042,
+        4295334,
+        3780709,
+        3148000,
+        3148625,
+        3191083
+      ]
+    }
+  ]
+}

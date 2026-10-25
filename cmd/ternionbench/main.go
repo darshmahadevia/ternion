@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"flag"
@@ -172,8 +173,14 @@ func measure(ctx context.Context, opts options) (report, error) {
 		return report{}, err
 	}
 	getResult, err := runConcurrent(ctx, "GET", opts.getOperations, opts.concurrency, func(worker, operation int) error {
-		_, err := clients[worker].Get(ctx, benchmarkKey(operation%opts.setOperations))
-		return err
+		got, err := clients[worker].Get(ctx, benchmarkKey(operation%opts.setOperations))
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(got, value) {
+			return fmt.Errorf("GET returned a different Value for operation %d", operation)
+		}
+		return nil
 	})
 	if err != nil {
 		return report{}, err

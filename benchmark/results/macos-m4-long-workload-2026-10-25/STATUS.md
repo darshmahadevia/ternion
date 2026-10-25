@@ -1,0 +1,3 @@
+# Longer workload observations
+
+Five 25,000-operation trials completed with checked payloads and no terminal public-operation errors. A concurrent local connection probe failed with EADDRNOTAVAIL during the fifth trial, and that trial had a large read-latency outlier. The client creates a new TCP connection per operation. These runs are retained as observations of the client and database together, not as a database capacity result. A separate smaller workload avoids cumulative connection pressure and supplies the primary resume measurements. Do not silently discard the slow fifth run when interpreting this directory.

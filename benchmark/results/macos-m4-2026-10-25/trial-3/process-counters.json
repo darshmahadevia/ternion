@@ -1,0 +1,34 @@
+[
+  {
+    "monotonic": 150992.348547125,
+    "processes": "50085  14.8  23792   0:00.14 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50086   7.8  21056   0:00.08 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50087   7.6  21312   0:00.08 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50090   2.0   5920   0:00.01 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternionbench\n"
+  },
+  {
+    "monotonic": 150993.362156166,
+    "processes": "50085  15.0  24848   0:00.30 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50086   5.1  22496   0:00.14 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50087   6.0  22848   0:00.14 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50090  12.3  22640   0:00.15 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternionbench\n"
+  },
+  {
+    "monotonic": 150994.381472958,
+    "processes": "50085  17.6  25808   0:00.48 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50086   6.0  23280   0:00.21 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50087   6.1  23424   0:00.20 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50090  16.6  22736   0:00.31 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternionbench\n"
+  },
+  {
+    "monotonic": 150995.397497708,
+    "processes": "50085  15.7  26112   0:00.65 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50086   5.7  23744   0:00.27 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50087   5.3  23808   0:00.26 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50090  17.7  22912   0:00.50 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternionbench\n"
+  },
+  {
+    "monotonic": 150996.4141945,
+    "processes": "50085  16.3  27024   0:00.82 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50086   6.0  23952   0:00.33 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50087   5.7  23968   0:00.32 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50090  17.6  23104   0:00.71 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternionbench\n"
+  },
+  {
+    "monotonic": 150997.430992458,
+    "processes": "50085  15.5  27696   0:00.99 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50086   5.4  24096   0:00.40 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50087   5.3  24272   0:00.39 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50090  18.0  23152   0:00.92 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternionbench\n"
+  },
+  {
+    "monotonic": 150998.44746275,
+    "processes": "50085  16.0  28608   0:01.16 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50086   6.0  24432   0:00.46 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50087   5.0  24592   0:00.44 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50090  20.5  23200   0:01.13 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternionbench\n"
+  },
+  {
+    "monotonic": 150999.461919541,
+    "processes": "50085  15.5  29920   0:01.41 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50086   5.5  26048   0:00.56 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50087   5.7  25744   0:00.53 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternion\n50090  19.7  23456   0:01.38 /Users/darshm/Documents/Projects/ternion/.benchmark-work/ternionbench\n"
+  }
+]

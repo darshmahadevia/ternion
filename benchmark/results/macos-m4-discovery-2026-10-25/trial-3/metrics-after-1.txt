@@ -1,0 +1,12 @@
+ternion_rpc_total 89421
+ternion_rpc_errors_total 2
+ternion_elections_total 1
+ternion_raft_rpcs_total 63985
+ternion_proposals_total 5232
+ternion_client_errors_total 2
+ternion_client_retries_total 0
+ternion_wal_syncs_total 6353
+ternion_snapshots_total 0
+ternion_snapshot_installations_total 0
+ternion_snapshot_compactions_total 0
+ternion_commit_latency_microseconds_total 0

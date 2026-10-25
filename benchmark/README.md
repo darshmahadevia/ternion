@@ -37,3 +37,7 @@ threads, 15.3 GiB RAM, NVMe SSD, Go 1.26.5, with three local processes,
 These are local development measurements, not production claims. Results are
 sensitive to filesystem, process placement, payload, and concurrency; compare
 only reports with their metadata.
+
+## Repeated macOS measurements
+
+The [October 25 Apple M4 report](macos-m4-2026-10-25.md) records five fresh, leader-first local clusters with value-checked GETs. It includes raw latency samples, ranges, protocol counters, and the limits found in longer discovery workloads. Its results use different hardware and workload sizes from the Windows run above.

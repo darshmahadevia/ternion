@@ -1,0 +1,4 @@
+{"time":"2026-10-25T13:16:12.703889-04:00","level":"INFO","msg":"Raft role changed","node_id":"node-1","term":0,"role":"RAFT_ROLE_PRE_CANDIDATE","leader_id":"","last_log_index":0,"commit_index":0,"last_applied":0,"snapshot_index":0}
+{"time":"2026-10-25T13:16:12.708722-04:00","level":"INFO","msg":"Raft role changed","node_id":"node-1","term":1,"role":"RAFT_ROLE_CANDIDATE","leader_id":"","last_log_index":0,"commit_index":0,"last_applied":0,"snapshot_index":0}
+{"time":"2026-10-25T13:16:12.720277-04:00","level":"INFO","msg":"Raft role changed","node_id":"node-1","term":1,"role":"RAFT_ROLE_LEADER","leader_id":"node-1","last_log_index":1,"commit_index":0,"last_applied":0,"snapshot_index":0}
+{"time":"2026-10-25T13:16:19.063304-04:00","level":"INFO","msg":"Raft role changed","node_id":"node-1","term":2,"role":"RAFT_ROLE_FOLLOWER","leader_id":"","last_log_index":492,"commit_index":484,"last_applied":484,"snapshot_index":0}

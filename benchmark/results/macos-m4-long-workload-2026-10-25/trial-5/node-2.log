@@ -1,0 +1,2 @@
+{"time":"2026-10-25T13:16:18.906653-04:00","level":"INFO","msg":"Raft role changed","node_id":"node-2","term":1,"role":"RAFT_ROLE_PRE_CANDIDATE","leader_id":"","last_log_index":486,"commit_index":484,"last_applied":484,"snapshot_index":0}
+{"time":"2026-10-25T13:16:19.048692-04:00","level":"INFO","msg":"Raft role changed","node_id":"node-2","term":2,"role":"RAFT_ROLE_FOLLOWER","leader_id":"","last_log_index":486,"commit_index":484,"last_applied":484,"snapshot_index":0}
