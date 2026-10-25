@@ -9,11 +9,11 @@ CLI output from a local three-node run. [Read the transcript](docs/images/failov
 ## Engineering highlights
 
 - Built a fixed three-node key-value store that continues after one node fails while the other two can communicate. Acknowledged mutations require durable replication to a two-node quorum, commitment, and application.
-- Measured median throughput of 145.1 durable SETs per second and 2,936.7 value-checked linearizable GETs per second across five fresh local clusters on an Apple M4 Mac. Each trial used eight workers, 1 KiB values, 1,000 SETs, and 1,500 GETs. See the [method and ranges](benchmark/macos-m4-2026-10-25.md).
+- Measured median throughput of 145.1 durable SETs per second and 2,936.7 value-checked linearizable GETs per second. The five short local benchmarks ran fresh clusters on an Apple M4 Mac. Each trial used eight workers, 1 KiB values, 1,000 SETs, and 1,500 GETs. See the [method and ranges](benchmark/macos-m4-2026-10-25.md).
 - Kept the Raft state machine deterministic and independent of networking, storage, and timers. Seeded fault simulations emit replay commands, and tests exercise linearizability and multi-process failures.
-- Made retried mutations have at-most-once effect through replicated client sessions and sequence numbers. Checksummed WAL segments and atomically installed snapshots support restart and stale-follower recovery.
+- Gave retried mutations at-most-once effects within a client session by replicating session IDs and sequence numbers. Checksummed WAL segments and atomically installed snapshots support restart and stale-follower recovery.
 
-The new five-run result uses three local processes and a leader-first client configuration on macOS. It is not production capacity or failover latency. The earlier Windows result below is a separate, smaller workload on different hardware. See the [workload and raw results](benchmark/README.md), [guarantees](docs/architecture.md), and [deterministic core design](docs/adr/0004-deterministic-raft-core.md).
+The five-run result uses three local processes on macOS, with the leader first in the client address list. These short workloads measure local API behavior. Production capacity and failover latency need separate tests. The earlier Windows result below is a separate, smaller workload on different hardware. See the [workload and raw results](benchmark/README.md), [guarantees](docs/architecture.md), and [deterministic core design](docs/adr/0004-deterministic-raft-core.md).
 
 ## Watch a cluster fail and recover
 
@@ -25,11 +25,11 @@ cd ternion
 sh demo/run.sh
 ```
 
-The script builds Ternion, starts three Nodes with separate persistent volumes, and runs a guided failure scenario. It writes and reads data, kills the Leader, shows that the remaining two Nodes can continue, restarts the old Leader, isolates a minority, and forces Snapshot recovery for a stale Follower. The script removes its containers and volumes when it exits.
+The script builds Ternion and starts three Nodes with separate persistent volumes. It writes and reads data, then kills the Leader and checks that the other two Nodes can continue. It restarts the old Leader, isolates a minority, and forces Snapshot recovery for a stale Follower. The script removes its containers and volumes when it exits.
 
 The demo lowers the Snapshot threshold so compaction happens quickly. Normal configurations default to 64 MiB.
 
-This is a systems project, not a production database. It has no authentication or TLS and should run only on a trusted development network.
+Run Ternion on a trusted development network. This systems project has no authentication or TLS.
 
 [![CI](https://github.com/darshmahadevia/ternion/actions/workflows/ci.yml/badge.svg)](https://github.com/darshmahadevia/ternion/actions/workflows/ci.yml)
 
@@ -74,7 +74,7 @@ The client follows Leader hints directly. `status` reports one Node's local view
 
 ## Consistency and failure behavior
 
-A completed Mutation is visible to a later successful read. A minority partition cannot accept Mutations or serve successful reads. A timeout leaves the outcome unknown, so callers should retry with the same Client Session and sequence number rather than issue a new Mutation.
+A completed Mutation is visible to a later successful read. A minority partition cannot accept Mutations or serve successful reads. After a timeout, the outcome is unknown. Retry with the same Client Session and sequence number.
 
 Two Nodes may briefly believe they are the Leader in different Terms. Raft's election rules and intersecting Quorums prevent those beliefs from producing conflicting committed histories.
 
