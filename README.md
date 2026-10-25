@@ -6,6 +6,15 @@ Ternion is a Go key-value store that uses Raft to keep a three-node cluster cons
 
 CLI output from a local three-node run. [Read the transcript](docs/images/failover.txt). Values in the JSON output use Base64.
 
+## Engineering highlights
+
+- Built a fixed three-node key-value store that continues after one node fails while the other two can communicate. Acknowledged mutations require durable replication to a two-node quorum, commitment, and application.
+- Recorded 715.1 durable SETs per second and 1,028.1 linearizable GETs per second in a published local benchmark with eight workers and 1 KiB values. SET and GET p99 latency were 15.50 ms and 11.52 ms.
+- Kept the Raft state machine deterministic and independent of networking, storage, and timers. Seeded fault simulations emit replay commands, and tests exercise linearizability and multi-process failures.
+- Made retried mutations have at-most-once effect through replicated client sessions and sequence numbers. Checksummed WAL segments and atomically installed snapshots support restart and stale-follower recovery.
+
+The benchmark ran three local processes on a Windows development machine with an AMD Ryzen 7 8845HS, using 500 SETs and 2,000 GETs. It is one short run, not a production capacity or failover-latency claim. See the [workload and raw results](benchmark/README.md), [guarantees](docs/architecture.md), and [deterministic core design](docs/adr/0004-deterministic-raft-core.md).
+
 ## Watch a cluster fail and recover
 
 You need Docker with Docker Compose.
